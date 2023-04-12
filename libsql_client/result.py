@@ -1,7 +1,7 @@
+from collections.abc import Sequence
 from typing import Dict, Iterator, List, Tuple, Union, overload
-import collections
 
-Value = Union[str, float, int, bytes, None]
+Value = Union[None, str, int, float, bytes]
 
 class ResultSet:
     """Result of an SQL statement.
@@ -12,25 +12,36 @@ class ResultSet:
 
     _columns: Tuple[str, ...]
     _rows: List["Row"]
+    _rows_affected: int
+    __slots__ = ["_columns", "_rows", "_rows_affected"]
 
-    def __init__(self, columns: Tuple[str, ...], rows: List["Row"]) -> None:
+    def __init__(self, columns: Tuple[str, ...], rows: List["Row"], rows_affected: int):
         self._columns = columns
         self._rows = rows
-
-    @property
-    def columns(self) -> Tuple[str, ...]:
-        """The column names in the result set."""
-        return self._columns
-
-    @property
-    def rows(self) -> List["Row"]:
-        """List of all rows in the result set."""
-        return self._rows
+        self._rows_affected = rows_affected
 
     def __iter__(self) -> Iterator["Row"]:
         return self._rows.__iter__()
 
-class Row(collections.abc.Sequence):
+    def __len__(self) -> int:
+        return len(self._rows)
+
+    def __getitem__(self, key: Union[int, slice]) -> "Row":
+        return self._rows[key]
+
+    @property
+    def columns(self) -> Tuple[str, ...]:
+        return self._columns
+
+    @property
+    def rows(self) -> List["Row"]:
+        return self._rows
+
+    @property
+    def rows_affected(self) -> int:
+        return self._rows_affected
+
+class Row(Sequence):
     """A row returned by an SQL statement.
 
     The row values can be accessed with an index or by name.
@@ -38,18 +49,18 @@ class Row(collections.abc.Sequence):
 
     _column_idxs: Dict[str, int]
     _values: Tuple[Value, ...]
+    __slots__ = ["_column_idxs", "_values"]
 
     def __init__(self, column_idxs: Dict[str, int], values: Tuple[Value, ...]) -> None:
         self._column_idxs = column_idxs
         self._values = values
 
     @overload
-    def __getitem__(self, key: Union[int, str]) -> Value:
-        pass
-
+    def __getitem__(self, key: int) -> Value: pass
     @overload
-    def __getitem__(self, key: slice) -> Tuple[Value, ...]:
-        pass
+    def __getitem__(self, key: str) -> Value: pass
+    @overload
+    def __getitem__(self, key: slice) -> Tuple[Value, ...]: pass
 
     def __getitem__(self, key: Union[int, str, slice]) -> Union[Value, Tuple[Value, ...]]:
         """Access a value by index or by name."""
@@ -65,6 +76,14 @@ class Row(collections.abc.Sequence):
 
     def __repr__(self) -> str:
         return repr(self._values)
+
+    def astuple(self) -> Tuple[Value, ...]:
+        return self._values
+
+    def asdict(self) -> Dict[str, Value]:
+        return {key: self._values[idx] for key, idx in self._column_idxs.items()}
+
+    _asdict = asdict
 
     @property
     def _fields(self) -> Tuple[str, ...]:
