@@ -95,7 +95,6 @@ async def test_error_does_not_rollback(transaction_client):
     assert rs[0][0] == 2
 
 @pytest.mark.asyncio
-@pytest.mark.xfail
 async def test_transaction_not_supported(http_url):
     async with libsql_client.create_client(http_url) as c:
         with pytest.raises(libsql_client.LibsqlError) as excinfo:

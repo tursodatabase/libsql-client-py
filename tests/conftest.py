@@ -27,8 +27,7 @@ def _url(request):
     else:
         assert False, f"Bad URL request.param: {request.param!r}"
 
-#@pytest.fixture(params=["http", "ws", "file"])
-@pytest.fixture(params=["ws", "file"])
+@pytest.fixture(params=["http", "ws", "file"])
 def url(request):
     return _url(request)
 
