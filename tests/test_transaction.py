@@ -9,7 +9,7 @@ async def _assert_closed(t):
 
 @pytest.mark.asyncio
 async def test_multiple_queries(transaction_client):
-    with await transaction_client.transaction() as t:
+    with transaction_client.transaction() as t:
         rs = await t.execute("SELECT 1")
         assert rs[0][0] == 1
 
@@ -23,7 +23,7 @@ async def test_commit(transaction_client):
         "CREATE TABLE t (a)",
     ])
 
-    with await transaction_client.transaction() as t:
+    with transaction_client.transaction() as t:
         await t.execute("INSERT INTO t VALUES ('one')")
         assert not t.closed
         await t.commit()
@@ -39,7 +39,7 @@ async def test_rollback(transaction_client):
         "CREATE TABLE t (a)",
     ])
 
-    with await transaction_client.transaction() as t:
+    with transaction_client.transaction() as t:
         await t.execute("INSERT INTO t VALUES ('one')")
         assert not t.closed
         await t.rollback()
@@ -55,7 +55,7 @@ async def test_close(transaction_client):
         "CREATE TABLE t (a)",
     ])
 
-    t = await transaction_client.transaction()
+    t = transaction_client.transaction()
     await t.execute("INSERT INTO t VALUES ('one')")
     assert not t.closed
     t.close()
@@ -66,13 +66,13 @@ async def test_close(transaction_client):
 
 @pytest.mark.asyncio
 async def test_context_manager(transaction_client):
-    with await transaction_client.transaction() as t:
+    with transaction_client.transaction() as t:
         assert not t.closed
     assert t.closed
 
 @pytest.mark.asyncio
 async def test_close_twice(transaction_client):
-    t = await transaction_client.transaction()
+    t = transaction_client.transaction()
     t.close()
     t.close()
     assert t.closed
@@ -84,7 +84,7 @@ async def test_error_does_not_rollback(transaction_client):
         "CREATE TABLE t (a)",
     ])
 
-    with await transaction_client.transaction() as t:
+    with transaction_client.transaction() as t:
         await t.execute("INSERT INTO t VALUES ('one')")
         with pytest.raises(libsql_client.LibsqlError) as excinfo:
             await t.execute("SELECT foobar")
@@ -97,7 +97,7 @@ async def test_error_does_not_rollback(transaction_client):
 @pytest.mark.asyncio
 @pytest.mark.xfail
 async def test_transaction_not_supported(http_url):
-    with libsql_client.create_client(http_url) as c:
+    async with libsql_client.create_client(http_url) as c:
         with pytest.raises(libsql_client.LibsqlError) as excinfo:
-            await c.transaction()
+            c.transaction()
         assert excinfo.value.code == "TRANSACTIONS_NOT_SUPPORTED"

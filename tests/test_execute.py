@@ -62,7 +62,7 @@ async def test_error_multiple_statements(url, client):
 
     with pytest.raises(libsql_client.LibsqlError) as excinfo:
         await client.execute("SELECT 1; SELECT 2")
-    assert "more than one command" in str(excinfo.value)
+    assert "one statement" in str(excinfo.value)
 
 @pytest.mark.asyncio
 async def test_rows_affected_insert(client):

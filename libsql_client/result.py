@@ -26,7 +26,12 @@ class ResultSet:
     def __len__(self) -> int:
         return len(self._rows)
 
-    def __getitem__(self, key: Union[int, slice]) -> "Row":
+    @overload
+    def __getitem__(self, key: int) -> "Row": pass
+    @overload
+    def __getitem__(self, key: slice) -> List["Row"]: pass
+
+    def __getitem__(self, key: Union[int, slice]) -> Union["Row", List["Row"]]:
         return self._rows[key]
 
     @property

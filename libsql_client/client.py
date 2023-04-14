@@ -1,3 +1,4 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
@@ -18,13 +19,15 @@ class Statement:
         self.args = args
 
     @staticmethod
-    def convert(stmt: InStatement, args: InArgs = None) -> "Statement":
+    def convert(stmt: InStatement, args: InArgs = None) -> Statement:
         if isinstance(stmt, tuple):
+            if len(stmt) == 1:
+                return Statement(stmt[0], args)
             if len(stmt) > 2:
-                raise TypeError(f"Statement must be a 2-tuple, but got a {len(stmt)}-tuple")
+                raise TypeError(f"Statement must be a 1-tuple or 2-tuple, but got a {len(stmt)}-tuple")
             if args:
                 raise TypeError("Cannot pass additional args to a statement passed as tuple")
-            return Statement(stmt[0], stmt[1] if len(stmt) >= 2 else None)
+            return Statement(stmt[0], stmt[1]) # type: ignore[misc]
         if isinstance(stmt, Statement):
             if args:
                 raise TypeError("Cannot pass additional args to a Statement instance")
@@ -48,20 +51,20 @@ class Client(ABC):
     async def batch(self, stmts: List[InStatement]) -> List[ResultSet]: pass
 
     @abstractmethod
-    async def transaction(self) -> "Transaction": pass
+    def transaction(self) -> Transaction: pass
 
     @abstractmethod
-    def close(self) -> None: pass
+    async def close(self) -> None: pass
 
     @property
     @abstractmethod
     def closed(self) -> bool: pass
 
-    def __enter__(self: TClient) -> TClient:
+    async def __aenter__(self: TClient) -> TClient:
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        self.close()
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        await self.close()
 
 TTransaction = TypeVar("TTransaction", bound="Transaction")
 
@@ -87,3 +90,10 @@ class Transaction(ABC):
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
+
+def _normalize_value(in_value: InValue) -> Value:
+    if isinstance(in_value, datetime):
+        return int(in_value.timestamp() * 1000)
+    elif isinstance(in_value, bool):
+        return int(in_value)
+    return in_value

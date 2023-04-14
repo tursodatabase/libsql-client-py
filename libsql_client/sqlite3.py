@@ -1,13 +1,19 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, Tuple, cast
 import asyncio
+import math
 import sqlite3
 
-from .client import Client, InArgs, InStatement, InValue, LibsqlError, Statement, Transaction, Tuple
+from .client import (
+    Client, InArgs, InStatement, InValue,
+    LibsqlError, Statement, Transaction,
+    _normalize_value,
+)
 from .config import _Config
 from .result import ResultSet, Row, Value
 
-def _create_sqlite3_client(config: _Config) -> "Sqlite3Client":
+def _create_sqlite3_client(config: _Config) -> Sqlite3Client:
     assert config.scheme == "file"
     if config.authority not in ("", "localhost"):
         raise LibsqlError(f"Invalid authority in file URL: {config.authority!r}", "URL_INVALID")
@@ -49,7 +55,7 @@ class Sqlite3Client(Client):
         finally:
             db.close()
 
-    async def transaction(self) -> "Sqlite3Transaction":
+    def transaction(self) -> Sqlite3Transaction:
         db = self._connect()
         try:
             _execute_stmt(db, "BEGIN")
@@ -58,7 +64,7 @@ class Sqlite3Client(Client):
             db.close()
             raise
 
-    def close(self) -> None:
+    async def close(self) -> None:
         self._closed = True
 
     @property
@@ -149,6 +155,6 @@ def _strip_arg_name(name: str) -> str:
     return name
 
 def _value_to_sql(value: InValue) -> Any:
-    if isinstance(value, datetime):
-        return int(value.timestamp() * 1000)
-    return value
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("Only finite floats (not Infinity or NaN) are supported")
+    return _normalize_value(value)

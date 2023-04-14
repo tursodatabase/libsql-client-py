@@ -45,18 +45,16 @@ async def test_float(client):
     assert await _roundtrip(client, 12.345) == 12.345
 
 @pytest.mark.asyncio
-async def test_infinity(client):
-    assert await _roundtrip(client, math.inf) == math.inf
-    assert await _roundtrip(client, -math.inf) == -math.inf
-
-@pytest.mark.asyncio
-async def test_nan(client):
-    assert await _roundtrip(client, math.nan) is None
+async def test_not_finite(client):
+    for x in [math.inf, -math.inf, math.nan]:
+        with pytest.raises(ValueError):
+            await _roundtrip(client, x)
 
 @pytest.mark.asyncio
 async def test_bytes(client):
-    b = bytes(range(256))
-    assert await _roundtrip(client, b) == b
+    for l in [0, 1, 2, 3, 4, 100, 113, 256]:
+        b = bytes(range(l))
+        assert await _roundtrip(client, b) == b
 
 @pytest.mark.asyncio
 async def test_none(client):

@@ -1,5 +1,6 @@
 import os
 import pytest
+import pytest_asyncio
 import requests
 
 import libsql_client
@@ -27,21 +28,20 @@ def _url(request):
         assert False, f"Bad URL request.param: {request.param!r}"
 
 #@pytest.fixture(params=["http", "ws", "file"])
-@pytest.fixture(params=["file"])
+@pytest.fixture(params=["ws", "file"])
 def url(request):
     return _url(request)
 
-#@pytest.fixture(params=["ws", "file"])
-@pytest.fixture(params=["file"])
+@pytest.fixture(params=["ws", "file"])
 def transaction_url(request):
     return _url(request)
 
-@pytest.fixture
-def client(url):
-    with libsql_client.create_client(url) as c:
+@pytest_asyncio.fixture
+async def client(url):
+    async with libsql_client.create_client(url) as c:
         yield c
 
-@pytest.fixture
-def transaction_client(transaction_url):
-    with libsql_client.create_client(transaction_url) as c:
+@pytest_asyncio.fixture
+async def transaction_client(transaction_url):
+    async with libsql_client.create_client(transaction_url) as c:
         yield c

@@ -1,21 +1,24 @@
 import libsql_client
 import pytest
 
-def test_closed(url):
+@pytest.mark.asyncio
+async def test_closed(url):
     client = libsql_client.create_client(url)
     assert not client.closed
-    client.close()
+    await client.close()
     assert client.closed
 
-def test_context_manager(url):
-    with libsql_client.create_client(url) as client:
+@pytest.mark.asyncio
+async def test_context_manager(url):
+    async with libsql_client.create_client(url) as client:
         assert not client.closed
     assert client.closed
 
-def test_close_twice(url):
+@pytest.mark.asyncio
+async def test_close_twice(url):
     client = libsql_client.create_client(url)
-    client.close()
-    client.close()
+    await client.close()
+    await client.close()
     assert client.closed
 
 def test_error_url_scheme_not_supported():
