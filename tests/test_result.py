@@ -59,11 +59,11 @@ async def test_row_asdict(client):
     assert rs.rows[0].asdict() == {"one": 1, "two": 2, "three": 3}
     assert rs.rows[0].asdict() == rs.rows[0]._asdict()
 
-if (sys.version_info.major, sys.version_info.minor) >= (3, 8):
+try:
     import pandas
-else:
+except ImportError:
     pandas = None
-pandas_only = pytest.mark.skipif(pandas is None, reason="pandas not supported in this Python version")
+pandas_only = pytest.mark.skipif(pandas is None, reason="pandas not installed")
 
 @pytest.mark.asyncio
 @pandas_only

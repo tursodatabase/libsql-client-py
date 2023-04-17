@@ -1,0 +1,33 @@
+name: "CI"
+on: [push, pull_request]
+
+jobs:
+  "test":
+    name: "Typecheck and test"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        "python-version": ["3.7", "3.11"]
+    steps:
+    - name: "Checkout this repo"
+      uses: actions/checkout@v3
+    - name: "Install Poetry"
+      run: "pip install poetry"
+    - name: "Setup Python"
+      uses: actions/setup-python@v4
+      with:
+        python-version: "${{ matrix.python-version }}"
+        cache: "poetry"
+    - name: "Install poetry dependencies"
+      run: "poetry install --no-interaction"
+
+    - name: "Typecheck with MyPy"
+      run: "poetry run mypy"
+
+    - name: "Checkout hrana-test-server"
+      uses: actions/checkout@v3
+      with:
+        repository: "libsql/hrana-test-server"
+        path: "hrana-test-server"
+    - name: "Test with pytest"
+      run: "poetry run python hrana-test-server/test_server.py pytest --verbose"

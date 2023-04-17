@@ -17,11 +17,15 @@ python = "^3.7"
 aiohttp = "^3.0"
 
 [tool.poetry.group.dev.dependencies]
-pandas = "^1.0"
 pytest = "^7.2"
 pytest-asyncio = "^0.20.3"
 mypy = "^1.2"
 requests = "^2.28.2"
+
+[tool.poetry.group.pandas]
+optional = true
+[tool.poetry.group.pandas.dependencies]
+pandas = "^1.0"
 
 [tool.mypy]
 packages = ["libsql_client"]
