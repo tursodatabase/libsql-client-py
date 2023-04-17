@@ -2,7 +2,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Dict, List, NamedTuple, Optional, Protocol, Tuple, TypeVar, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing_extensions import Protocol
 
 from .result import ResultSet, Value
 

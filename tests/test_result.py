@@ -1,6 +1,6 @@
-import pandas
 import libsql_client
 import pytest
+import sys
 
 @pytest.mark.asyncio
 async def test_blob(client):
@@ -59,13 +59,21 @@ async def test_row_asdict(client):
     assert rs.rows[0].asdict() == {"one": 1, "two": 2, "three": 3}
     assert rs.rows[0].asdict() == rs.rows[0]._asdict()
 
+if (sys.version_info.major, sys.version_info.minor) >= (3, 8):
+    import pandas
+else:
+    pandas = None
+pandas_only = pytest.mark.skipif(pandas is None, reason="pandas not supported in this Python version")
+
 @pytest.mark.asyncio
+@pandas_only
 async def test_pandas_from_records(client):
     rs = await client.execute("SELECT 1, 'two', 3.0")
     data_frame = pandas.DataFrame.from_records(rs.rows)
     assert data_frame.shape == (1, 3)
 
 @pytest.mark.asyncio
+@pandas_only
 async def test_pandas_ctor(client):
     rs = await client.execute("SELECT 1 AS one, 'two' AS two, 3.0 AS three")
     data_frame = pandas.DataFrame(rs)
