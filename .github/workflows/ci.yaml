@@ -31,3 +31,8 @@ jobs:
         path: "hrana-test-server"
     - name: "Test with pytest"
       run: "poetry run python hrana-test-server/test_server.py pytest --verbose"
+    - name: "Run the readme example"
+      run: "poetry run python examples/readme.py"
+    - name: "Run the books example"
+      run: "poetry run python examples/books.py"
+

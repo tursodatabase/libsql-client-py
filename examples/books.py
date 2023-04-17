@@ -1,11 +1,11 @@
 import asyncio
 import libsql_client
+import os
 import random
 
-url = "http://localhost:8080"
-
 async def main():
-    async with libsql_client.Client(url) as client:
+    url = os.getenv("URL", "file:local.db")
+    async with libsql_client.create_client(url) as client:
         await client.batch([
             """
             CREATE TABLE IF NOT EXISTS book (
@@ -46,6 +46,12 @@ async def main():
         for row in books_res.rows:
             print(row)
 
+def sample_name(name_parts):
+    return " ".join([
+        random.choice(parts)
+        for parts in name_parts
+    ])
+
 AUTHOR_NAME_PARTS = [
     ["Daniel", "Jane", "Mark", "William", "Milan", "Kazuo", "Sally", "Mieko", "Kim"],
     ["Defoe", "Austen", "Twain", "Golding", "Kundera", "Ishiguro", "Rooney", "Kawakami", "Hye-Jin"],
@@ -61,11 +67,5 @@ BOOK_TITLE_PARTS = [
         "je jinde", "and The Sun", "People", "and Eggs", "My Daughter",
     ],
 ]
-
-def sample_name(name_parts):
-    return " ".join([
-        random.choice(parts)
-        for parts in name_parts
-    ])
 
 asyncio.run(main())
