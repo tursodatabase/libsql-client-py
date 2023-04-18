@@ -8,6 +8,7 @@ authors = [
 description = "Python SDK for libSQL"
 homepage = "https://github.com/libsql/libsql-client-py"
 repository = "https://github.com/libsql/libsql-client-py"
+documentation = "https://libsql.org/libsql-client-py/"
 readme = "README.md"
 license = "MIT"
 classifiers = [

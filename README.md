@@ -1,5 +1,11 @@
 # Python SDK for libSQL
 
+**[API reference][reference] | [Github][github] | [PyPI][pypi]**
+
+[reference]: https://libsql.org/libsql-client-py/reference.html
+[github]: https://github.com/libsql/libsql-client-py
+[pypi]: https://pypi.org/project/libsql-client/
+
 This is the source repository of the Python SDK for libSQL. You can either connect to a local SQLite database or to a remote libSQL server ([sqld][sqld]).
 
 [sqld]: https://github.com/libsql/sqld
