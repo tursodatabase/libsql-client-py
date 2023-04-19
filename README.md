@@ -53,6 +53,23 @@ The client can connect to the database using different methods depending on the 
 * `http:` or `https:` connect to sqld using HTTP. The `transaction()` API is not available in this case.
 * `libsql:` is equivalent to `wss:`.
 
+## Synchronous API
+
+This package also provides a synchronous version of the client, which can be created by calling `create_client_sync()`. It supports the same methods as the default `asyncio` client, except that they block the calling thread:
+
+```python
+import libsql_client
+
+url = "file:local.db"
+with libsql_client.create_client(url) as client:
+    result_set = client.execute("SELECT * from users")
+    print(len(result_set.rows), "rows")
+    for row in result_set.rows:
+        print(row)
+```
+
+The synchronous client is just a thin wrapper around the asynchronous client, but it runs the event loop in a background thread.
+
 ## Contributing to this package
 
 First, please install Python and [Poetry][poetry]. To install all dependencies for local development to a

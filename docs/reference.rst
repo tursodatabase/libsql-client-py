@@ -2,9 +2,9 @@
 Reference
 =========
 
-------
-Client
-------
+--------------
+Asyncio client
+--------------
 
 .. function:: create_client(url, *, auth_token=None)
 
@@ -14,8 +14,8 @@ Client
    :type auth_token: Optional[str]
    :rtype: :class:`Client`
 
-   Create a client for connecting to a database. This library supports multiple approaches for connecting to
-   the database, which are distinguished by the scheme (protocol) in the URL:
+   Creates an asynchronous client for connecting to a database. This library supports multiple approaches for
+   connecting to the database, which are distinguished by the scheme (protocol) in the URL:
 
    * ``file:`` connects to a local SQLite database (using the builtin ``sqlite3`` package)
 
@@ -126,6 +126,118 @@ Client
 
    .. method:: rollback()
       :async:
+
+      :rtype: None
+
+      Rolls back the transaction and closes it.
+
+   .. method:: close()
+
+      :rtype: None
+
+      Closes the transaction. If the transaction has not been committed with :meth:`commit()`, it will be
+      rolled back.
+
+   .. property:: closed
+
+      :type: bool
+
+      Indicates whether the transaction has been closed.
+
+------------------
+Synchronous client
+------------------
+
+For very simple use cases, we also provide a synchronous version of the client. It is a thin wrapper around
+the ``asyncio``-based :class:`Client`, but it runs the event loop in a background thread and provides blocking
+APIs.
+
+.. function:: create_client_sync(url, *, auth_token=None)
+
+   :param url: Database URL
+   :type url: str
+   :param auth_token: Optional authentication token (JWT)
+   :type auth_token: Optional[str]
+   :rtype: :class:`ClientSync`
+
+   Creates a synchronous client for connecting to a database. This is the same as :func:`create_client()`, but
+   it returns an instance of :class:`ClientSync`.
+
+.. class:: ClientSync
+
+   A synchronous version of :class:`Client`. It provides the same methods, but they will block the current
+   thread until they complete.
+
+   You should always close the client by calling :meth:`close()` or by using a ``with`` statement.
+
+   .. method:: execute(stmt, args=None)
+
+      :param stmt: SQL statement to execute
+      :type stmt: :data:`InStatement`
+      :param args: Optional SQL arguments to the statement
+      :type args: :data:`InArgs`
+      :return: The result set produced by the statement
+      :rtype: :class:`ResultSet`
+
+      Executes a single statement and returns the result. If you need to execute multiple statements, consider
+      using :meth:`batch()` or :meth:`transaction()`.
+
+   .. method:: batch(stmts)
+
+      :param stmts: List of SQL statements to execute
+      :type stmts: List[:data:`InStatement`]
+      :return: List of results from the statements
+      :rtype: List[:class:`ResultSet`]
+
+      Executes a batch of statements in a transaction and returns the results. If any of the statements fails,
+      the transaction is rolled back and this method throws an exception.
+
+   .. method:: transaction()
+
+      :rtype: :class:`TransactionSync`
+
+      Starts an interactive transaction and returns a :class:`TransactionSync` object, which you can use to
+      synchronously execute statements in the transaction.
+
+   .. method:: close()
+
+      :rtype: None
+
+      Closes the client and releases resources.
+
+   .. property:: closed
+
+      :type: bool
+
+      Indicates whether the client has been closed.
+
+.. class:: TransactionSync
+
+   A ``TransactionSync`` is analogous to :class:`Transaction`, but it provides a synchronous API. You can open
+   a transaction using :meth:`ClientSync.transaction()`.
+
+   You should always close the transaction by calling :meth:`commit()`, :meth:`rollback()` or :meth:`close()`,
+   or by using a ``with`` statement. If you don't :meth:`commit()` the transaction, the changes will be rolled
+   back automatically.
+
+   .. method:: execute(stmt, args=None)
+
+      :param stmt: SQL statement to execute
+      :type stmt: :data:`InStatement`
+      :param args: Optional SQL arguments to the statement
+      :type args: :data:`InArgs`
+      :return: The result set produced by the statement
+      :rtype: :class:`ResultSet`
+
+      Executes a statement in the transaction and returns the result.
+
+   .. method:: commit()
+
+      :rtype: None
+
+      Commits the transaction to the database and closes the transaction.
+
+   .. method:: rollback()
 
       :rtype: None
 
