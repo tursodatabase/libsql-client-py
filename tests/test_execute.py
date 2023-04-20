@@ -78,7 +78,19 @@ async def test_rows_affected_delete(client):
     await client.batch([
         "DROP TABLE IF EXISTS t",
         "CREATE TABLE t (a)",
-            "INSERT INTO t VALUES (1), (2), (3), (4), (5)",
+        "INSERT INTO t VALUES (1), (2), (3), (4), (5)",
     ])
     rs = await client.execute("DELETE FROM t WHERE a >= 3")
     assert rs.rows_affected == 3
+
+@pytest.mark.asyncio
+async def test_last_insert_rowid(client):
+    await client.batch([
+        "DROP TABLE IF EXISTS t",
+        "CREATE TABLE t (a)",
+        "INSERT INTO t VALUES ('one'), ('two')",
+    ])
+    insert_rs = await client.execute("INSERT INTO t VALUES ('three')")
+    assert insert_rs.last_insert_rowid is not None
+    select_rs = await client.execute("SELECT a FROM t WHERE ROWID = ?", [insert_rs.last_insert_rowid])
+    assert select_rs[0].astuple() == ("three",)

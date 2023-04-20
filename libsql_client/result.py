@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Dict, Iterator, List, Tuple, Union, overload
+from typing import Dict, Iterator, List, Optional, Tuple, Union, overload
 
 Value = Union[None, str, int, float, bytes]
 
@@ -13,12 +13,20 @@ class ResultSet:
     _columns: Tuple[str, ...]
     _rows: List["Row"]
     _rows_affected: int
-    __slots__ = ["_columns", "_rows", "_rows_affected"]
+    _last_insert_rowid: Optional[int]
+    __slots__ = ["_columns", "_rows", "_rows_affected", "_last_insert_rowid"]
 
-    def __init__(self, columns: Tuple[str, ...], rows: List["Row"], rows_affected: int):
+    def __init__(
+        self,
+        columns: Tuple[str, ...],
+        rows: List["Row"],
+        rows_affected: int,
+        last_insert_rowid: Optional[int],
+    ):
         self._columns = columns
         self._rows = rows
         self._rows_affected = rows_affected
+        self._last_insert_rowid = last_insert_rowid
 
     def __iter__(self) -> Iterator["Row"]:
         return self._rows.__iter__()
@@ -45,6 +53,10 @@ class ResultSet:
     @property
     def rows_affected(self) -> int:
         return self._rows_affected
+
+    @property
+    def last_insert_rowid(self) -> Optional[int]:
+        return self._last_insert_rowid
 
 class Row(Sequence):
     """A row returned by an SQL statement.

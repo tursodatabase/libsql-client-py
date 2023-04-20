@@ -30,7 +30,9 @@ def _result_set_from_proto(proto_res: proto.StmtResult) -> ResultSet:
         values = tuple(_value_from_proto(proto_val) for proto_val in proto_row)
         rows.append(Row(column_idxs, values))
     rows_affected = proto_res["affected_row_count"]
-    return ResultSet(columns, rows, rows_affected)
+    last_insert_rowid_str = proto_res.get("last_insert_rowid")
+    last_insert_rowid = int(last_insert_rowid_str) if last_insert_rowid_str is not None else None
+    return ResultSet(columns, rows, rows_affected, last_insert_rowid)
 
 def _batch_to_proto(in_stmts: List[InStatement]) -> proto.Batch:
     steps: List[proto.BatchStep] = []

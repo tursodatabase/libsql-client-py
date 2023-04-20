@@ -145,7 +145,8 @@ def _execute_stmt(db: sqlite3.Connection, in_stmt: InStatement, in_args: InArgs 
         column_idxs = {column: idx for idx, column in enumerate(columns)}
         rows = [Row(column_idxs, sql_row) for sql_row in sql_rows]
         rows_affected = cursor.rowcount
-        return ResultSet(columns, rows, rows_affected)
+        last_insert_rowid = cursor.lastrowid
+        return ResultSet(columns, rows, rows_affected, last_insert_rowid)
     finally:
         cursor.close()
 
