@@ -25,8 +25,8 @@ import asyncio
 import libsql_client
 
 async def main():
-    url = "file:local.db"
-    async with libsql_client.create_client(url) as client:
+    url = "http://localhost:8080"
+    async with libsql_client.Client(url) as client:
         result_set = await client.execute("SELECT * from users")
         print(len(result_set.rows), "rows")
         for row in result_set.rows:
@@ -61,7 +61,7 @@ This package also provides a synchronous version of the client, which can be cre
 import libsql_client
 
 url = "file:local.db"
-with libsql_client.create_client(url) as client:
+with libsql_client.Client(url) as client:
     result_set = client.execute("SELECT * from users")
     print(len(result_set.rows), "rows")
     for row in result_set.rows:
