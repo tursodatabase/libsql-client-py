@@ -61,7 +61,7 @@ This package also provides a synchronous version of the client, which can be cre
 import libsql_client
 
 url = "file:local.db"
-with libsql_client.create_client(url) as client:
+with libsql_client.create_client_sync(url) as client:
     result_set = client.execute("SELECT * from users")
     print(len(result_set.rows), "rows")
     for row in result_set.rows:
@@ -99,4 +99,4 @@ This project is licensed under the MIT license.
 
 ### Contribution
 
-Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `libsql-client` by you, shall be licensed as MIT, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in `libsql-client-py` by you, shall be licensed as MIT, without any additional terms or conditions.
