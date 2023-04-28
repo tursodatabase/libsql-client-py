@@ -302,27 +302,108 @@ Statements
    This class can be used to pass a statement to :class:`Client` or :class:`Transaction`, instead of using a
    tuple.
 
+-------
+Results
+-------
+
+.. class:: ResultSet
+
+   ``ResultSet`` stores the result of executing a SQL statement. This object behaves like a sequence of
+   :class:`Row`-s, it supports indexing and iteration.
+
+   .. property:: rows
+
+      :type: List[Row]
+
+      List of :class:`Row`-s produced by the statement.
+
+   .. property:: columns
+
+      :type: Tuple[str, ...]
+
+      Tuple of column names. For columns without an explicit ``AS`` clause, the column name is unspecified.
+
+   .. property:: rows_affected
+
+      :type: int
+
+      Number of rows that were changed by the statement. This is only meaningful for INSERT, UPDATE and DELETE
+      statements.
+
+   .. property:: last_insert_rowid
+
+      :type: Optional[int]
+
+      ROWID of the last successful insert into a rowid table.
+
+   .. describe:: rs[i]
+
+      Returns the :class:`Row` at index ``i``
+
+   .. describe:: rs[i:j]
+
+      Returns a list of :class:`Row`-s from index ``i`` to ``j``.
+
+   .. describe:: len(rs)
+
+      Returns the number of rows in the result set.
+
+   .. describe:: for row in rs
+
+      Iterates over :class:`Row`-s in the result set.
+
+.. class:: Row
+
+   ``Row`` represents one row returned by a SQL statement.
+
+   .. describe:: row[key]
+
+      Returns the value of one column by ``key``. The key can be either an integer (to return a column by
+      position, indexed from 0) or a string (to return a column by name).
+
+   .. describe:: row[i:j]
+
+      Returns a tuple of column values with indexes in range ``i:j``.
+
+   .. describe:: len(row)
+
+      Returns the number of columns in this row.
+
+   .. method:: astuple()
+
+      :rtype: Tuple[:data:`Value`, ...]
+
+      Returns the values in the row as a tuple.
+
+   .. method:: asdict()
+
+      :rtype: Dict[str, :data:`Value`]
+
+      Returns the values in the row in a dict where keys are column names.
+   
 ------
 Values
 ------
 
-SQLite values are mapped to Python as follows:
+.. data:: Value
 
-- ``TEXT`` is converted to a Python ``str``
-- ``INTEGER`` is converted to a Python ``int``
-- ``FLOAT`` is converted to a Python ``float``
-- ``BLOB`` is converted to a Python ``bytes``
-- ``NULL`` is converted to ``None``
+   SQLite values are mapped to Python as follows:
 
-Conversion from Python to SQLite is analogous, but the library also supports the following Python data types:
+   - ``TEXT`` is converted to a Python ``str``
+   - ``INTEGER`` is converted to a Python ``int``
+   - ``FLOAT`` is converted to a Python ``float``
+   - ``BLOB`` is converted to a Python ``bytes``
+   - ``NULL`` is converted to ``None``
 
-- ``datetime.datetime`` is converted to an integer that represents the Unix timestamp in milliseconds
-- ``True`` and ``False`` are converted to integers ``1`` and ``0``, respectively
+   Conversion from Python to SQLite is analogous, but the library also supports the following Python data types:
 
-Non-finite float values (infinity and NaN) are not supported, you will get a `ValueError` if you try to pass
-them to the database as arguments. Also, the SQLite ``INTEGER`` type is a signed 64-bit integer, so if you
-pass a Python ``int`` that is out of range (smaller than ``-2**63`` or greater than ``2**63-1``), you will get
-an ``OverflowError``.
+   - ``datetime.datetime`` is converted to an integer that represents the Unix timestamp in milliseconds
+   - ``True`` and ``False`` are converted to integers ``1`` and ``0``, respectively
+
+   Non-finite float values (infinity and NaN) are not supported, you will get a `ValueError` if you try to pass
+   them to the database as arguments. Also, the SQLite ``INTEGER`` type is a signed 64-bit integer, so if you
+   pass a Python ``int`` that is out of range (smaller than ``-2**63`` or greater than ``2**63-1``), you will get
+   an ``OverflowError``.
 
 ----------
 Exceptions

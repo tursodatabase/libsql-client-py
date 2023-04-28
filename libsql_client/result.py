@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections.abc import Sequence
 from typing import Dict, Iterator, List, Optional, Tuple, Union, overload
 
@@ -11,7 +12,7 @@ class ResultSet:
     """
 
     _columns: Tuple[str, ...]
-    _rows: List["Row"]
+    _rows: List[Row]
     _rows_affected: int
     _last_insert_rowid: Optional[int]
     __slots__ = ["_columns", "_rows", "_rows_affected", "_last_insert_rowid"]
@@ -35,11 +36,11 @@ class ResultSet:
         return len(self._rows)
 
     @overload
-    def __getitem__(self, key: int) -> "Row": pass
+    def __getitem__(self, key: int) -> Row: pass
     @overload
-    def __getitem__(self, key: slice) -> List["Row"]: pass
+    def __getitem__(self, key: slice) -> List[Row]: pass
 
-    def __getitem__(self, key: Union[int, slice]) -> Union["Row", List["Row"]]:
+    def __getitem__(self, key: Union[int, slice]) -> Union[Row, List[Row]]:
         return self._rows[key]
 
     @property
@@ -47,7 +48,7 @@ class ResultSet:
         return self._columns
 
     @property
-    def rows(self) -> List["Row"]:
+    def rows(self) -> List[Row]:
         return self._rows
 
     @property
