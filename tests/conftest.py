@@ -44,3 +44,8 @@ async def client(url):
 async def transaction_client(transaction_url):
     async with libsql_client.create_client(transaction_url) as c:
         yield c
+
+@pytest_asyncio.fixture
+async def ws_client(ws_url):
+    async with libsql_client.create_client(ws_url) as c:
+        yield c
