@@ -30,7 +30,7 @@ def test_batch(client_sync):
     assert rss[0][0].astuple() == (2,)
     assert rss[1][0].astuple() == (10, "two")
 
-def transaction_commit(transaction_client_sync):
+def test_transaction_commit(transaction_client_sync):
     transaction_client_sync.batch([
         "DROP TABLE IF EXISTS t",
         "CREATE TABLE t (a)",
@@ -41,11 +41,12 @@ def transaction_commit(transaction_client_sync):
         rs = transaction.execute("SELECT COUNT(*) FROM t")
         assert rs[0][0] == 2
         transaction.commit()
+    assert transaction.closed
 
-    rs = transaction.execute("SELECT COUNT(*) FROM t")
+    rs = transaction_client_sync.execute("SELECT COUNT(*) FROM t")
     assert rs[0][0] == 2
 
-def transaction_rollback(transaction_client_sync):
+def test_transaction_rollback(transaction_client_sync):
     transaction_client_sync.batch([
         "DROP TABLE IF EXISTS t",
         "CREATE TABLE t (a)",
@@ -56,6 +57,20 @@ def transaction_rollback(transaction_client_sync):
         rs = transaction.execute("SELECT COUNT(*) FROM t")
         assert rs[0][0] == 2
         transaction.rollback()
+    assert transaction.closed
 
-    rs = transaction.execute("SELECT COUNT(*) FROM t")
+    rs = transaction_client_sync.execute("SELECT COUNT(*) FROM t")
     assert rs[0][0] == 0
+
+def test_close_twice(client_sync):
+    client_sync.close()
+    client_sync.close()
+
+def test_close_transaction_twice(transaction_client_sync):
+    with transaction_client_sync.transaction() as transaction:
+        transaction.close()
+
+def test_close_transaction_after_client(transaction_client_sync):
+    transaction = transaction_client_sync.transaction()
+    transaction_client_sync.close()
+    transaction.close()

@@ -150,7 +150,7 @@ Synchronous client
 
 For very simple use cases, we also provide a synchronous version of the client. It is a thin wrapper around
 the ``asyncio``-based :class:`Client`, but it runs the event loop in a background thread and provides blocking
-APIs.
+APIs. The sync client is thread-safe, it can be accessed from multiple threads concurrently.
 
 .. function:: create_client_sync(url, *, auth_token=None)
 

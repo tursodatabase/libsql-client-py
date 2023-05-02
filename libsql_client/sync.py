@@ -40,8 +40,7 @@ class ClientSync:
         return TransactionSync(self._executor, transaction)
 
     def close(self) -> None:
-        self._executor.submit_coro(self._client.close())
-        self._executor.close()
+        self._executor.close_with_coro(self._client.close)
 
     @property
     def closed(self) -> bool:
@@ -71,11 +70,11 @@ class TransactionSync:
         return self._executor.submit_coro(self._transaction.commit())
 
     def close(self) -> None:
-        self._executor.submit_func(self._transaction.close)
+        self._executor.submit_func_unless_closed(self._transaction.close, lambda: None)
 
     @property
     def closed(self) -> bool:
-        return self._executor.submit_func(lambda: self._transaction.closed)
+        return self._executor.submit_func_unless_closed(lambda: self._transaction.closed, lambda: True)
 
     def __enter__(self) -> TransactionSync:
         return self
@@ -129,7 +128,7 @@ class _AsyncExecutor:
             self._closed = True
             for item in self._queue:
                 if item is not None:
-                    item.future.set_exception(LibsqlError("Client was closed", "CLIENT_CLOSED"))
+                    item.future.set_exception(LibsqlError("Client is closed", "CLIENT_CLOSED"))
             self._queue.clear()
 
     async def _dequeue_item(self) -> Optional[_QueueItem]:
@@ -152,10 +151,10 @@ class _AsyncExecutor:
             self._loop.call_soon_threadsafe(resolve_waker)
 
     def submit_coro(self, coro: Coroutine[Any, Any, T]) -> T:
-        fut: concurrent.futures.Future = concurrent.futures.Future()
         with self._lock:
             if self._closed:
                 raise LibsqlError("Client is closed", "CLIENT_CLOSED")
+            fut: concurrent.futures.Future = concurrent.futures.Future()
             self._enqueue_item_with_lock(_QueueItem(coro, fut))
         return fut.result()
 
@@ -164,11 +163,30 @@ class _AsyncExecutor:
             return func()
         return self.submit_coro(coro())
 
-    def close(self) -> None:
+    def submit_func_unless_closed(self, on_open: Callable[[], T], on_closed: Callable[[], T]) -> T:
+        async def on_open_coro() -> T:
+            return on_open()
         with self._lock:
-            if not self._closed:
-                self._enqueue_item_with_lock(None)
+            if self._closed:
+                return on_closed()
+            fut: concurrent.futures.Future = concurrent.futures.Future()
+            self._enqueue_item_with_lock(_QueueItem(on_open_coro(), fut))
+        return fut.result()
+
+    def close_with_coro(self, coro_func: Callable[[], Coroutine[Any, Any, None]]) -> None:
+        with self._lock:
+            if self._closed:
+                return
+            fut: concurrent.futures.Future = concurrent.futures.Future()
+            self._enqueue_item_with_lock(_QueueItem(coro_func(), fut))
+            self._enqueue_item_with_lock(None)
         self._thread.join()
+        fut.result()
+
+    def close(self) -> None:
+        async def noop() -> None:
+            return None
+        self.close_with_coro(noop)
 
     def is_closed(self) -> bool:
         with self._lock:
