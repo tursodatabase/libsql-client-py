@@ -105,10 +105,12 @@ def _value_to_proto(in_value: InValue) -> proto.Value:
         if not math.isfinite(value):
             raise ValueError("Only finite floats (not Infinity or NaN) are supported")
         return {"type": "float", "value": value}
-    elif isinstance(value, bytes):
-        return {"type": "blob", "base64": base64.b64encode(value).decode()}
     else:
-        raise TypeError(f"Unsupported value of type {type(value)}")
+        try:
+            data = base64.b64encode(value).decode()
+            return {"type": "blob", "base64": data }
+        except TypeError:
+            raise TypeError(f"Unsupported value of type {type(value)}")
 
 _MIN_INTEGER = -2**63
 _MAX_INTEGER = 2**63-1

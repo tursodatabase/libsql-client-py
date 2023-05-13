@@ -2,12 +2,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
-from typing_extensions import Protocol
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, TypeVar, Union
 
 from .result import ResultSet, Value
 
-InValue = Union[Value, bool, datetime]
+if TYPE_CHECKING:
+    from _typeshed import ReadableBuffer
+else:
+    ReadableBuffer = bytes
+
+InValue = Union[Value, bool, datetime, ReadableBuffer]
 InArgs = Union[List[InValue], Tuple[InValue, ...], Dict[str, InValue], None]
 InStatement = Union["Statement", str, Tuple[str], Tuple[str, InArgs]]
 
@@ -97,4 +101,6 @@ def _normalize_value(in_value: InValue) -> Value:
         return int(in_value.timestamp() * 1000)
     elif isinstance(in_value, bool):
         return int(in_value)
-    return in_value
+    elif isinstance(in_value, (str, int, float)) or in_value is None:
+        return in_value
+    return bytes(memoryview(in_value))
