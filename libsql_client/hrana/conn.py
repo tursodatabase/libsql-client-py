@@ -250,8 +250,10 @@ class HranaConn:
             return
         stream_state.closed = e
 
-        def close_done(_fut: asyncio.Future[proto.Response]) -> None:
+        def close_done(fut: asyncio.Future[proto.Response]) -> None:
             self._stream_id_alloc.free(stream_state.stream_id)
+            if not fut.cancelled():
+                fut.exception()
 
         close_fut = self.send_request({
             "type": "close_stream",
