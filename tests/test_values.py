@@ -57,6 +57,10 @@ async def test_bytes(client):
         assert await _roundtrip(client, b) == b
 
 @pytest.mark.asyncio
+async def test_bytearray(client):
+    assert await _roundtrip(client, bytearray(b"foobar")) == b"foobar"
+
+@pytest.mark.asyncio
 async def test_none(client):
     assert await _roundtrip(client, None) is None
 
