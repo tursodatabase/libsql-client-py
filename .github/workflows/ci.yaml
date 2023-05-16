@@ -32,8 +32,10 @@ jobs:
       with:
         repository: "libsql/hrana-test-server"
         path: "hrana-test-server"
-    - name: "Test with pytest"
-      run: "poetry run python hrana-test-server/test_server.py pytest --verbose"
+    - name: "Test with server v1"
+      run: "poetry run python hrana-test-server/server_v1.py pytest --verbose"
+    - name: "Test with server v2"
+      run: "poetry run python hrana-test-server/server_v2.py pytest --verbose"
     - name: "Run the readme example"
       run: "poetry run python examples/readme.py"
     - name: "Run the books example"

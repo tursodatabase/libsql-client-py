@@ -56,7 +56,7 @@ class HranaConn:
     async def _do_connect(self, session: aiohttp.ClientSession, url: str) -> aiohttp.ClientWebSocketResponse:
         return await session.ws_connect(
             url,
-            protocols=["hrana1"],
+            protocols=["hrana1", "hrana2"],
             autoclose=False,
             autoping=True,
         )
