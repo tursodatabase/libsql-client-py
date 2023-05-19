@@ -34,6 +34,7 @@ Stmt = TypedDict("Stmt", {
 
 Col = TypedDict("Col", {
     "name": Optional[str],
+    "decltype": NotRequired[Optional[str]],
 })
 
 StmtResult = TypedDict("StmtResult", {
