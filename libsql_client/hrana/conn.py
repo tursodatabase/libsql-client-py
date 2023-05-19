@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
 import aiohttp
 import asyncio
 import json
@@ -325,6 +325,30 @@ class HranaStream:
 
         def get_result(response: proto.Response) -> proto.StmtResult:
             return cast(proto.ExecuteResp, response)["result"]
+        return _map_future(response_fut, get_result)
+
+    def sequence(self, stmt: Union[str, int]) -> asyncio.Future[None]:
+        if self._state.closed is not None:
+            raise LibsqlError("Stream was closed", "STREAM_CLOSED") from self._state.closed
+
+        request: proto.SequenceReq
+        if isinstance(stmt, str):
+            request = {
+                "type": "sequence",
+                "stream_id": self._state.stream_id,
+                "sql": stmt,
+            }
+        else:
+            request = {
+                "type": "sequence",
+                "stream_id": self._state.stream_id,
+                "sql_id": stmt,
+            }
+
+        response_fut = self._conn.send_request(request)
+
+        def get_result(response: proto.Response) -> None:
+            return None
         return _map_future(response_fut, get_result)
 
     def batch(self, batch: proto.Batch) -> asyncio.Future[proto.BatchResult]:

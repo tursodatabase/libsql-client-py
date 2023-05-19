@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Union
 import aiohttp
 import asyncio
 import urllib.parse

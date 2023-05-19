@@ -57,6 +57,22 @@ ExecuteResp = TypedDict("ExecuteResp", {
     "result": StmtResult,
 })
 
+
+### Execute a sequence of SQL statements
+
+SequenceReq = TypedDict("SequenceReq", {
+    "type": Literal["sequence"],
+    "stream_id": int,
+    # NOTE: must provide one of sql or sql_id
+    "sql":  NotRequired[str],
+    "sql_id": NotRequired[int],
+})
+
+SequenceResp = TypedDict("SequenceResp", {
+    "type": Literal["sequence"],
+})
+
+
 ### Execute a batch
 
 BatchCondOk = TypedDict("BatchCondOk", {"type": Literal["ok"], "step": int})
@@ -162,6 +178,7 @@ Request = Union[
     BatchReq,
     StoreSqlReq,
     CloseSqlReq,
+    SequenceReq,
 ]
 
 RequestMsg = TypedDict("RequestMsg", {
@@ -177,6 +194,7 @@ Response = Union[
     BatchResp,
     StoreSqlResp,
     CloseSqlResp,
+    SequenceResp,
 ]
 
 ResponseOkMsg = TypedDict("ResponseOkMsg", {
