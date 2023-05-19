@@ -26,7 +26,9 @@ NamedArg = TypedDict("NamedArg", {
 })
 
 Stmt = TypedDict("Stmt", {
-    "sql": str,
+    # NOTE: must provide one of sql or sql_id
+    "sql":  NotRequired[str],
+    "sql_id": NotRequired[int],
     "args": NotRequired[List[Value]],
     "named_args": NotRequired[List[NamedArg]],
     "want_rows": bool,
@@ -127,6 +129,30 @@ HelloErrorMsg = TypedDict("HelloErrorMsg", {
     "error": Error,
 })
 
+### Store an SQL text on the server
+
+StoreSqlReq = TypedDict("StoreSqlReq", {
+    "type": Literal["store_sql"],
+    "sql_id": int,
+    "sql": str,
+})
+
+StoreSqlResp = TypedDict("StoreSqlResp", {
+    "type": Literal["store_sql"],
+})
+
+### Close a stored SQL text
+
+CloseSqlReq = TypedDict("CloseSqlReq", {
+    "type": Literal["close_sql"],
+    "sql_id": int,
+})
+
+CloseSqlResp = TypedDict("CloseSqlResp", {
+    "type": Literal["close_sql"],
+})
+
+
 ### Request/response
 
 Request = Union[
@@ -134,6 +160,8 @@ Request = Union[
     CloseStreamReq,
     ExecuteReq,
     BatchReq,
+    StoreSqlReq,
+    CloseSqlReq,
 ]
 
 RequestMsg = TypedDict("RequestMsg", {
@@ -147,6 +175,8 @@ Response = Union[
     CloseStreamResp,
     ExecuteResp,
     BatchResp,
+    StoreSqlResp,
+    CloseSqlResp,
 ]
 
 ResponseOkMsg = TypedDict("ResponseOkMsg", {

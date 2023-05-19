@@ -32,6 +32,7 @@ class HranaConn:
     _response_map: Dict[int, _ResponseState]
     _request_id_alloc: IdAlloc
     _stream_id_alloc: IdAlloc
+    _sql_id_alloc: IdAlloc
 
     exception: Optional[BaseException]
 
@@ -48,6 +49,7 @@ class HranaConn:
         self._response_map = {}
         self._request_id_alloc = IdAlloc()
         self._stream_id_alloc = IdAlloc()
+        self._sql_id_alloc = IdAlloc()
 
         self.exception = None
 
@@ -56,7 +58,7 @@ class HranaConn:
     async def _do_connect(self, session: aiohttp.ClientSession, url: str) -> aiohttp.ClientWebSocketResponse:
         return await session.ws_connect(
             url,
-            protocols=["hrana1", "hrana2"],
+            protocols=["hrana2"],
             autoclose=False,
             autoping=True,
         )
@@ -265,6 +267,42 @@ class HranaConn:
         self._set_exception(LibsqlError("Client was manually closed", "CLIENT_CLOSED"))
         if self._socket is not None:
             await self._socket.close()
+
+    def store_sql(self, sql: str) -> int:
+        sql_id = self._sql_id_alloc.alloc()
+
+        def store_sql_done(fut: asyncio.Future[proto.Response]) -> None:
+            e: Optional[BaseException]
+            if fut.cancelled():
+                e = asyncio.CancelledError("store_sql was cancelled")
+            else:
+                e = fut.exception()
+            if e is not None:
+                self._sql_id_alloc.free(sql_id)
+
+        store_sql_fut = self.send_request({
+            "type": "store_sql",
+            "sql_id": sql_id,
+            "sql": sql,
+        })
+        store_sql_fut.add_done_callback(store_sql_done)
+        return sql_id
+
+    def close_sql(self, sql_id: int) -> None:
+        if self.exception is not None:
+            return
+
+        def close_sql_done(fut: asyncio.Future[proto.Response]) -> None:
+            self._sql_id_alloc.free(sql_id)
+            if not fut.cancelled():
+                fut.exception()
+
+        close_sql_fut = self.send_request( {
+            "type": "close_sql",
+            "sql_id": sql_id,
+        })
+        close_sql_fut.add_done_callback(close_sql_done)
+
 
 class HranaStream:
     _conn: HranaConn
