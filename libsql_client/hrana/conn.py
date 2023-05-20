@@ -29,6 +29,7 @@ class HranaConn:
     _send_msg_queue: asyncio.Queue[str]
 
     _recvd_hello: bool
+    _finished_handshake: asyncio.Event
     _response_map: Dict[int, _ResponseState]
     _request_id_alloc: IdAlloc
     _stream_id_alloc: IdAlloc
@@ -46,6 +47,7 @@ class HranaConn:
         self._send_msg_queue = asyncio.Queue()
 
         self._recvd_hello = False
+        self._finished_handshake = asyncio.Event()
         self._response_map = {}
         self._request_id_alloc = IdAlloc()
         self._stream_id_alloc = IdAlloc()
@@ -54,6 +56,11 @@ class HranaConn:
         self.exception = None
 
         self._send({"type": "hello", "jwt": auth_token})
+
+    async def wait_connected(self) -> None:
+        await self._finished_handshake.wait()
+        if self.exception:
+            raise self.exception
 
     async def _do_connect(self, session: aiohttp.ClientSession, url: str) -> aiohttp.ClientWebSocketResponse:
         return await session.ws_connect(
@@ -159,6 +166,7 @@ class HranaConn:
         if self.exception is not None:
             return
         self.exception = e
+        self._finished_handshake.set()
 
         for task in (self._connect_task, self._receive_task, self._send_task):
             if task is not None:
@@ -194,6 +202,7 @@ class HranaConn:
             if self._recvd_hello:
                 raise LibsqlError("Received a duplicated error response", "HRANA_PROTO_ERROR")
             self._recvd_hello = True
+            self._finished_handshake.set()
 
             if msg["type"] == "hello_error":
                 raise _error_from_proto(msg["error"])
