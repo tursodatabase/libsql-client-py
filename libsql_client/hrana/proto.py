@@ -26,7 +26,9 @@ NamedArg = TypedDict("NamedArg", {
 })
 
 Stmt = TypedDict("Stmt", {
-    "sql": str,
+    # NOTE: must provide one of sql or sql_id
+    "sql":  NotRequired[str],
+    "sql_id": NotRequired[int],
     "args": NotRequired[List[Value]],
     "named_args": NotRequired[List[NamedArg]],
     "want_rows": bool,
@@ -34,6 +36,7 @@ Stmt = TypedDict("Stmt", {
 
 Col = TypedDict("Col", {
     "name": Optional[str],
+    "decltype": NotRequired[Optional[str]],
 })
 
 StmtResult = TypedDict("StmtResult", {
@@ -53,6 +56,22 @@ ExecuteResp = TypedDict("ExecuteResp", {
     "type": Literal["execute"],
     "result": StmtResult,
 })
+
+
+### Execute a sequence of SQL statements
+
+SequenceReq = TypedDict("SequenceReq", {
+    "type": Literal["sequence"],
+    "stream_id": int,
+    # NOTE: must provide one of sql or sql_id
+    "sql":  NotRequired[str],
+    "sql_id": NotRequired[int],
+})
+
+SequenceResp = TypedDict("SequenceResp", {
+    "type": Literal["sequence"],
+})
+
 
 ### Execute a batch
 
@@ -126,6 +145,30 @@ HelloErrorMsg = TypedDict("HelloErrorMsg", {
     "error": Error,
 })
 
+### Store an SQL text on the server
+
+StoreSqlReq = TypedDict("StoreSqlReq", {
+    "type": Literal["store_sql"],
+    "sql_id": int,
+    "sql": str,
+})
+
+StoreSqlResp = TypedDict("StoreSqlResp", {
+    "type": Literal["store_sql"],
+})
+
+### Close a stored SQL text
+
+CloseSqlReq = TypedDict("CloseSqlReq", {
+    "type": Literal["close_sql"],
+    "sql_id": int,
+})
+
+CloseSqlResp = TypedDict("CloseSqlResp", {
+    "type": Literal["close_sql"],
+})
+
+
 ### Request/response
 
 Request = Union[
@@ -133,6 +176,9 @@ Request = Union[
     CloseStreamReq,
     ExecuteReq,
     BatchReq,
+    StoreSqlReq,
+    CloseSqlReq,
+    SequenceReq,
 ]
 
 RequestMsg = TypedDict("RequestMsg", {
@@ -146,6 +192,9 @@ Response = Union[
     CloseStreamResp,
     ExecuteResp,
     BatchResp,
+    StoreSqlResp,
+    CloseSqlResp,
+    SequenceResp,
 ]
 
 ResponseOkMsg = TypedDict("ResponseOkMsg", {

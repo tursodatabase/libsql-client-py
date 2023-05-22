@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, TypeVar, cast
+from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
 import aiohttp
 import asyncio
 import json
@@ -29,9 +29,11 @@ class HranaConn:
     _send_msg_queue: asyncio.Queue[str]
 
     _recvd_hello: bool
+    _finished_handshake: asyncio.Event
     _response_map: Dict[int, _ResponseState]
     _request_id_alloc: IdAlloc
     _stream_id_alloc: IdAlloc
+    _sql_id_alloc: IdAlloc
 
     exception: Optional[BaseException]
 
@@ -45,18 +47,25 @@ class HranaConn:
         self._send_msg_queue = asyncio.Queue()
 
         self._recvd_hello = False
+        self._finished_handshake = asyncio.Event()
         self._response_map = {}
         self._request_id_alloc = IdAlloc()
         self._stream_id_alloc = IdAlloc()
+        self._sql_id_alloc = IdAlloc()
 
         self.exception = None
 
         self._send({"type": "hello", "jwt": auth_token})
 
+    async def wait_connected(self) -> None:
+        await self._finished_handshake.wait()
+        if self.exception:
+            raise self.exception
+
     async def _do_connect(self, session: aiohttp.ClientSession, url: str) -> aiohttp.ClientWebSocketResponse:
         return await session.ws_connect(
             url,
-            protocols=["hrana1", "hrana2"],
+            protocols=["hrana2"],
             autoclose=False,
             autoping=True,
         )
@@ -157,6 +166,7 @@ class HranaConn:
         if self.exception is not None:
             return
         self.exception = e
+        self._finished_handshake.set()
 
         for task in (self._connect_task, self._receive_task, self._send_task):
             if task is not None:
@@ -192,6 +202,7 @@ class HranaConn:
             if self._recvd_hello:
                 raise LibsqlError("Received a duplicated error response", "HRANA_PROTO_ERROR")
             self._recvd_hello = True
+            self._finished_handshake.set()
 
             if msg["type"] == "hello_error":
                 raise _error_from_proto(msg["error"])
@@ -266,6 +277,42 @@ class HranaConn:
         if self._socket is not None:
             await self._socket.close()
 
+    def store_sql(self, sql: str) -> int:
+        sql_id = self._sql_id_alloc.alloc()
+
+        def store_sql_done(fut: asyncio.Future[proto.Response]) -> None:
+            e: Optional[BaseException]
+            if fut.cancelled():
+                e = asyncio.CancelledError("store_sql was cancelled")
+            else:
+                e = fut.exception()
+            if e is not None:
+                self._sql_id_alloc.free(sql_id)
+
+        store_sql_fut = self.send_request({
+            "type": "store_sql",
+            "sql_id": sql_id,
+            "sql": sql,
+        })
+        store_sql_fut.add_done_callback(store_sql_done)
+        return sql_id
+
+    def close_sql(self, sql_id: int) -> None:
+        if self.exception is not None:
+            return
+
+        def close_sql_done(fut: asyncio.Future[proto.Response]) -> None:
+            self._sql_id_alloc.free(sql_id)
+            if not fut.cancelled():
+                fut.exception()
+
+        close_sql_fut = self.send_request( {
+            "type": "close_sql",
+            "sql_id": sql_id,
+        })
+        close_sql_fut.add_done_callback(close_sql_done)
+
+
 class HranaStream:
     _conn: HranaConn
     _state: _StreamState
@@ -287,6 +334,30 @@ class HranaStream:
 
         def get_result(response: proto.Response) -> proto.StmtResult:
             return cast(proto.ExecuteResp, response)["result"]
+        return _map_future(response_fut, get_result)
+
+    def sequence(self, stmt: Union[str, int]) -> asyncio.Future[None]:
+        if self._state.closed is not None:
+            raise LibsqlError("Stream was closed", "STREAM_CLOSED") from self._state.closed
+
+        request: proto.SequenceReq
+        if isinstance(stmt, str):
+            request = {
+                "type": "sequence",
+                "stream_id": self._state.stream_id,
+                "sql": stmt,
+            }
+        else:
+            request = {
+                "type": "sequence",
+                "stream_id": self._state.stream_id,
+                "sql_id": stmt,
+            }
+
+        response_fut = self._conn.send_request(request)
+
+        def get_result(response: proto.Response) -> None:
+            return None
         return _map_future(response_fut, get_result)
 
     def batch(self, batch: proto.Batch) -> asyncio.Future[proto.BatchResult]:

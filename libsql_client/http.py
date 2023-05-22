@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, List, Optional, cast
+from typing import Any, List, Optional, Union, cast
 from typing_extensions import TypedDict
 import aiohttp
 import urllib.parse
@@ -37,6 +37,12 @@ class HttpClient(Client):
         response = await self._send("POST", "v1/execute", request)
         proto_res = cast(_ExecuteResp, response)["result"]
         return _result_set_from_proto(proto_res)
+
+    async def sequence(self, stmt: str) -> None:
+        raise LibsqlError(
+            "The HTTP client does not support sequence.",
+            "SEQUENCE_NOT_SUPPORTED",
+        )
 
     async def batch(self, stmts: List[InStatement]) -> List[ResultSet]:
         request: _BatchReq = {
