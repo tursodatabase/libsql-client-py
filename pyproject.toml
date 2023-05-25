@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "libsql-client"
-version = "0.2.3-pre"
+version = "0.3.0-pre"
 authors = [
     "Gustavo Barbieri <barbieri@gmail.com>",
     "Jan Špaček <honza@chiselstrike.com>",
