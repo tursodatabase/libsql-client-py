@@ -32,8 +32,6 @@ jobs:
       with:
         repository: "libsql/hrana-test-server"
         path: "hrana-test-server"
-    - name: "Test with server v1"
-      run: "poetry run python hrana-test-server/server_v1.py pytest --ignore tests/dbapi2 --verbose"
     - name: "Test with server v2 (reduced < python-3.11)"
       if: ${{ matrix.python-version != '3.11' }}
       run: "poetry run python hrana-test-server/server_v2.py pytest --ignore tests/dbapi2 --verbose"
