@@ -46,4 +46,3 @@ def connect(database, *args, **kwargs):
     if drop_schema:
         drop_user_schemas(conn)
     return conn
-

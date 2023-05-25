@@ -268,7 +268,7 @@ Statements
 
       "SELECT * FROM book"
 
-   * ``Tuple[str, InArgs]``: a pair of the SQL statement and :data:`arguments <InArgs>` 
+   * ``Tuple[str, InArgs]``: a pair of the SQL statement and :data:`arguments <InArgs>`
      (passed by position or by name)::
 
       ("SELECT * FROM book WHERE published < ? AND author = ?", [1940, "Agatha Christie"])
@@ -380,7 +380,7 @@ Results
       :rtype: Dict[str, :data:`Value`]
 
       Returns the values in the row in a dict where keys are column names.
-   
+
 ------
 Values
 ------

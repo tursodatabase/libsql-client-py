@@ -128,4 +128,3 @@ def _value_from_proto(value: proto.Value) -> Value:
         return base64.b64decode(value["base64"] + "====")
     else:
         raise LibsqlError(f"Unknown value type {value['type']!r}", "HRANA_PROTO_ERROR")
-
