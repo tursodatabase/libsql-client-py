@@ -33,18 +33,10 @@ jobs:
         cache: "poetry"
     - name: "Install poetry dependencies"
       run: "poetry install --no-interaction"
-
-    - name: "Typecheck with MyPy"
-      run: "poetry run mypy"
-
-    - name: "Test with server v2 (reduced < python-3.11)"
-      if: ${{ matrix.python-version != '3.11' }}
-      run: "poetry run python hrana-test-server/server_v2.py pytest --ignore tests/dbapi2 --verbose"
-    - name: "Test with server v2 (full-python-3.11)"
-      if: ${{ matrix.python-version == '3.11' }}
-      run: "poetry run python hrana-test-server/server_v2.py pytest --verbose"  # the dbapi2 tests were copied from python-3.11
-    - name: "Run the readme example"
-      run: "poetry run python examples/readme.py"
-    - name: "Run the books example"
-      run: "poetry run python examples/books.py"
-
+    - run: "pip install pre-commit"
+    - uses: actions/cache@v3
+      with:
+        path: ~/.cache/pre-commit
+        key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+    - name: "Run pre-commit"
+      run: pre-commit run --show-diff-on-failure --color=always --hook-stage push

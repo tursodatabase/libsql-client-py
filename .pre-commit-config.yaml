@@ -1,0 +1,35 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+default_install_hook_types: [pre-commit, pre-push, pre-merge-commit]
+
+repos:
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.3.0
+    hooks:
+    -   id: mypy
+        exclude: "^(tests|examples|docs|hrana-test-server)/"
+
+-   repo: local
+    hooks:
+    -   id: run-tests
+        name: run-tests
+        entry: ./scripts/run-tests.sh
+        exclude: ^(examples|docs|hrana-test-server)/
+        language: script
+        pass_filenames: false
+        always_run: true
+        types: [python]
+        stages: [push, merge-commit]
+
+-   repo: local
+    hooks:
+    -   id: run-examples
+        name: run-examples
+        entry: ./scripts/run-examples.sh
+        exclude: ^(tests|docs|hrana-test-server)/
+        language: script
+        pass_filenames: false
+        always_run: true
+        types: [python]
+        stages: [push, merge-commit]
