@@ -3,17 +3,27 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+concurrency:
+  group: ci-check-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  "test":
-    name: "Typecheck and test"
+  check:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft != true
     strategy:
       matrix:
         "python-version": ["3.7", "3.11"]
     steps:
-    - name: "Checkout this repo"
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
     - name: "Install Poetry"
       run: "pip install poetry"
     - name: "Setup Python"
@@ -27,11 +37,6 @@ jobs:
     - name: "Typecheck with MyPy"
       run: "poetry run mypy"
 
-    - name: "Checkout hrana-test-server"
-      uses: actions/checkout@v3
-      with:
-        repository: "libsql/hrana-test-server"
-        path: "hrana-test-server"
     - name: "Test with server v2 (reduced < python-3.11)"
       if: ${{ matrix.python-version != '3.11' }}
       run: "poetry run python hrana-test-server/server_v2.py pytest --ignore tests/dbapi2 --verbose"
