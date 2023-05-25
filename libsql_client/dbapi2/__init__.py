@@ -1,3 +1,24 @@
+from __future__ import annotations
+
+import sqlite3.dbapi2
+from typing import Any
+from typing import Mapping
+from typing import Optional
+from urllib.parse import urlparse
+
+from ._reexports import *
+from .hrana import ConnectionHrana as Connection
+from .hrana import CursorHrana as Cursor
+from .types import ConnectFactory
+from .types import Connection as BaseConnection
+from .types import ConnectionTypes
+from .types import Cursor as BaseCursor
+from .types import enable_callback_tracebacks
+from .types import IsolationLevel
+from .types import LEGACY_TRANSACTION_CONTROL
+from .types import PathLike
+from .types import Row
+
 """
 This module implements `Python Database API Specification v2.0
 <https://peps.python.org/pep-0249/>`_
@@ -7,29 +28,6 @@ documentation.
 
 """
 __docformat__ = "reStructuredText en"
-
-
-import sqlite3.dbapi2
-from urllib.parse import urlparse
-from typing import Any, Mapping, Optional
-
-from ._reexports import *  # noqa: F401,F403
-from .types import (  # noqa: F401
-    ConnectFactory,
-    Connection as BaseConnection,
-    ConnectionTypes,
-    Cursor as BaseCursor,
-    enable_callback_tracebacks,
-    IsolationLevel,
-    LEGACY_TRANSACTION_CONTROL,
-    PathLike,
-    Row,
-)
-
-from .hrana import (  # noqa: F401
-    ConnectionHrana as Connection,
-    CursorHrana as Cursor,
-)
 
 
 _connection_handlers: Mapping[str, ConnectFactory] = {

@@ -1,14 +1,22 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, TypeVar, Union, cast
-import aiohttp
-import asyncio
-import json
 
-from ..client import LibsqlError
+import asyncio
+from dataclasses import dataclass
+import json
+from typing import Any
+from typing import Callable
+from typing import cast
+from typing import Dict
+from typing import Optional
+from typing import TypeVar
+from typing import Union
+
+import aiohttp
+
 from . import proto
 from .convert import _error_from_proto
 from .id_alloc import IdAlloc
+from ..client import LibsqlError
 
 
 @dataclass
@@ -108,7 +116,7 @@ class HranaConn:
             if msg.type == aiohttp.WSMsgType.TEXT:
                 try:
                     self._receive(msg.data)
-                except Exception as e:
+                except Exception:
                     await socket.close(
                         code=3007, message="Could not handle message".encode()
                     )

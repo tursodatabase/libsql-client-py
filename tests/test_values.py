@@ -1,12 +1,12 @@
 from datetime import datetime
 import math
+
 import pytest
 
 
 async def _roundtrip(client, arg):
     rs = await client.execute("SELECT ?", [arg])
     return rs[0][0]
-    assert rs[0][0] == expected
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,6 @@
-import libsql_client
 import pytest
+
+import libsql_client
 
 
 @pytest.mark.asyncio

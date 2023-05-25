@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Set
 
 
@@ -6,7 +8,8 @@ from typing import Set
 # This clever data structure has these "ideal" properties:
 # - It consumes memory proportional to the number of used ids (which is optimal).
 # - All operations are O(1) time.
-# - The allocated ids are small (with a slight modification, we could always provide the smallest possible
+# - The allocated ids are small (with a slight modification, we could always
+#   provide the smallest possible
 # id).
 class IdAlloc:
     # Set of all allocated ids
@@ -29,9 +32,9 @@ class IdAlloc:
                 self._free_ids.add(len(self._used_ids) - 1)
             return free_id
 
-        # the `_free_ids` set is empty, so there are no free ids lower than `len(_used_ids)`
-        # this means that `_used_ids` is a set that contains all numbers from 0 to `len(_used_ids) - 1`,
-        # so `len(_used_ids)` is free
+        # the `_free_ids` set is empty, so there are no free ids lower than
+        # `len(_used_ids)` this means that `_used_ids` is a set that contains all
+        # numbers from 0 to `len(_used_ids) - 1`, so `len(_used_ids)` is free
         free_id = len(self._used_ids)
         self._used_ids.add(free_id)
         return free_id

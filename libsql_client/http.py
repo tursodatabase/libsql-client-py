@@ -1,18 +1,25 @@
 from __future__ import annotations
-from typing import Any, List, Optional, Union, cast
-from typing_extensions import TypedDict
-import aiohttp
+
+from typing import Any
+from typing import cast
+from typing import List
+from typing import Optional
 import urllib.parse
 
-from .client import Client, InArgs, InStatement, LibsqlError, Transaction
+import aiohttp
+from typing_extensions import TypedDict
+
+from .client import Client
+from .client import InArgs
+from .client import InStatement
+from .client import LibsqlError
+from .client import Transaction
 from .config import _Config
 from .hrana import proto
-from .hrana.convert import (
-    _stmt_to_proto,
-    _result_set_from_proto,
-    _batch_to_proto,
-    _batch_results_from_proto,
-)
+from .hrana.convert import _batch_results_from_proto
+from .hrana.convert import _batch_to_proto
+from .hrana.convert import _result_set_from_proto
+from .hrana.convert import _stmt_to_proto
 from .result import ResultSet
 
 
@@ -65,7 +72,8 @@ class HttpClient(Client):
     def transaction(self) -> Transaction:
         raise LibsqlError(
             "The HTTP client does not support transactions. "
-            "Please use a libsql:, ws: or wss: URL, so that the client connects using a WebSocket.",
+            "Please use a libsql:, ws: or wss: URL, so that the client "
+            "connects using a WebSocket.",
             "TRANSACTIONS_NOT_SUPPORTED",
         )
 
@@ -89,7 +97,8 @@ class HttpClient(Client):
                 elif resp.content_type == "text/plain":
                     resp_text = await resp.text()
                     raise LibsqlError(
-                        f"Server returned HTTP status {resp.status} and error: {resp_text!r}",
+                        "Server returned HTTP status "
+                        f"{resp.status} and error: {resp_text!r}",
                         "SERVER_ERROR",
                     )
                 raise LibsqlError(

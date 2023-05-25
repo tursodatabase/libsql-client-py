@@ -1,4 +1,3 @@
-import libsql_client
 import pytest
 
 

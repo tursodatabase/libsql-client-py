@@ -1,6 +1,8 @@
 import asyncio
-import libsql_client
+
 import pytest
+
+import libsql_client
 
 
 @pytest.mark.asyncio
@@ -97,7 +99,7 @@ async def test_error_rollback(client):
         ]
     )
 
-    with pytest.raises(libsql_client.LibsqlError) as excinfo:
+    with pytest.raises(libsql_client.LibsqlError):
         await client.batch(
             [
                 "INSERT INTO t VALUES ('two')",

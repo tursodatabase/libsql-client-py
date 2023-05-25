@@ -1,23 +1,24 @@
+from __future__ import annotations
+
 import asyncio
 import concurrent.futures
 import functools
 import logging
 import queue
-import threading
 import sys
+import threading
+from typing import Any
+from typing import Awaitable
+from typing import Callable
+from typing import NamedTuple
+from typing import Optional
+from typing import overload
+from typing import TypeVar
 
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    NamedTuple,
-    Optional,
-    overload,
-    TypeVar,
-)
 from typing_extensions import ParamSpec
 
-from ._utils import log_obj, log_prefix
+from ._utils import log_obj
+from ._utils import log_prefix
 
 _logger = logging.getLogger(__name__)
 _log_obj = functools.partial(log_obj, _logger)
@@ -32,14 +33,8 @@ class LoopControl(NamedTuple):
     stop_event: asyncio.Event
 
 
-if sys.version_info[:2] >= (3, 9):
-    MainQueue = queue.Queue[LoopControl]
-else:
-    MainQueue = queue.Queue
-
-
 # NOTE: keep outside of class, do not touch self, not even keep a reference
-def _thread_main(log_prefix: str, q: MainQueue) -> None:
+def _thread_main(log_prefix: str, q: queue.Queue[LoopControl]) -> None:
     loop: Optional[asyncio.AbstractEventLoop] = None
 
     def dbg(
@@ -78,7 +73,7 @@ class AsyncExecutor(threading.Thread):
 
     def __init__(self) -> None:
         self._control = None
-        q: MainQueue = queue.Queue(1)
+        q: queue.Queue[LoopControl] = queue.Queue(1)
         log_prefix = f"<{self.__class__.__name__} at {id(self):x}>"
         super().__init__(daemon=True, target=_thread_main, args=(log_prefix, q))
         self._inf("created")

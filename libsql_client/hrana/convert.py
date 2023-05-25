@@ -1,18 +1,19 @@
 from __future__ import annotations
-from typing import List
+
 import base64
 import math
+from typing import List
 
-from ..client import (
-    InArgs,
-    InValue,
-    InStatement,
-    LibsqlError,
-    Statement,
-    _normalize_value,
-)
-from ..result import ResultSet, Row, Value
 from . import proto
+from ..client import _normalize_value
+from ..client import InArgs
+from ..client import InStatement
+from ..client import InValue
+from ..client import LibsqlError
+from ..client import Statement
+from ..result import ResultSet
+from ..result import Row
+from ..result import Value
 
 
 def _stmt_to_proto(in_stmt: InStatement, in_args: InArgs = None) -> proto.Stmt:

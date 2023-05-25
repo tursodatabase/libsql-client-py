@@ -1,7 +1,8 @@
-from libsql_client import dbapi2
 import datetime
-import os
 import logging
+import os
+
+from libsql_client import dbapi2
 
 
 def show_rows(cursor, pfx="|"):

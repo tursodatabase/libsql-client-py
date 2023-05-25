@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from typing import Optional
 
-from .client import Client, LibsqlError
+from .client import Client
+from .client import LibsqlError
 from .config import _expand_config
 from .hrana import _create_hrana_client
 from .http import _create_http_client

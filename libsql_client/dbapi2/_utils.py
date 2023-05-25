@@ -1,6 +1,10 @@
-import logging
+from __future__ import annotations
 
-from typing import List, Iterable, Optional, Sequence
+import logging
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Sequence
 
 
 def log_prefix(

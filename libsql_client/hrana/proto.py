@@ -1,6 +1,12 @@
 from __future__ import annotations
-from typing import List, Optional, Union
-from typing_extensions import Literal, NotRequired, TypedDict
+
+from typing import List
+from typing import Optional
+from typing import Union
+
+from typing_extensions import Literal
+from typing_extensions import NotRequired
+from typing_extensions import TypedDict
 
 ### Errors
 

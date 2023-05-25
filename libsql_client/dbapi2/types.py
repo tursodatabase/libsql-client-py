@@ -1,58 +1,58 @@
+from __future__ import annotations
+
+from abc import ABCMeta
+from abc import abstractmethod
 import collections
 import collections.abc
-import os
-import logging
 import functools
+import logging
+import os
 import re
-import threading
-import sys
-
-from abc import ABCMeta, abstractmethod
-from weakref import WeakSet
-from typing import (
-    Any,
-    Callable,
-    cast,
-    ClassVar,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    overload,
-    Sequence,
-    Set,
-    Tuple,
-    TYPE_CHECKING,
-    TypeVar,
-    Union,
-)
-from typing_extensions import Literal, Self, ParamSpec
 import sqlite3.dbapi2
+from sqlite3.dump import _iterdump as sqlite3_iterdump
+import sys
+import threading
+from typing import Any
+from typing import Callable
+from typing import cast
+from typing import ClassVar
+from typing import Dict
+from typing import Iterable
+from typing import Iterator
+from typing import List
+from typing import NoReturn
+from typing import Optional
+from typing import overload
+from typing import Sequence
+from typing import Set
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import TypeVar
+from typing import Union
+from weakref import WeakSet
+
+from typing_extensions import Literal
+from typing_extensions import ParamSpec
+from typing_extensions import Self
+
 from . import _reexports
-from ._reexports import (
-    DatabaseError,
-    DataError,
-    IntegrityError,
-    InterfaceError,
-    InternalError,
-    NotSupportedError,
-    OperationalError,
-    ProgrammingError,
-    SQLITE_LIMIT_SQL_LENGTH,
-)
+from ._reexports import DatabaseError
+from ._reexports import DataError
+from ._reexports import IntegrityError
+from ._reexports import InterfaceError
+from ._reexports import InternalError
+from ._reexports import NotSupportedError
+from ._reexports import OperationalError
+from ._reexports import ProgrammingError
+from ._reexports import SQLITE_LIMIT_SQL_LENGTH
+from ._utils import iter_sql_statements
+from ._utils import log_obj
+from ..client import LibsqlError
+from ..hrana import proto
+from ..hrana.convert import _value_from_proto
 
 if sys.version_info[:2] >= (3, 11):
     from ._reexports import Blob
-
-from sqlite3.dump import _iterdump as sqlite3_iterdump  # type: ignore
-
-from ..hrana import proto
-from ..hrana.convert import _value_from_proto
-from ..client import LibsqlError
-
-from ._utils import log_obj, iter_sql_statements
 
 _logger = logging.getLogger(__name__)
 _log_obj = functools.partial(log_obj, _logger)
@@ -62,10 +62,8 @@ T = TypeVar("T")
 
 
 if TYPE_CHECKING:
-    from sqlite3.dbapi2 import (
-        _Parameters as SqlParameters,
-        _SqliteData as SqlData,
-    )
+    from sqlite3.dbapi2 import _Parameters as SqlParameters
+    from sqlite3.dbapi2 import _SqliteData as SqlData
 else:
     SqlParameters = Any
     SqlData = Any

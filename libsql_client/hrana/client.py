@@ -1,21 +1,27 @@
 from __future__ import annotations
-from typing import List, Optional, Set, Union
-import aiohttp
+
 import asyncio
+from typing import List
+from typing import Optional
+from typing import Set
 import urllib.parse
 
-from ..client import Client, InArgs, InStatement, LibsqlError, Transaction
+import aiohttp
+
+from . import proto
+from .conn import HranaConn
+from .conn import HranaStream
+from .convert import _batch_results_from_proto
+from .convert import _batch_to_proto
+from .convert import _result_set_from_proto
+from .convert import _stmt_to_proto
+from ..client import Client
+from ..client import InArgs
+from ..client import InStatement
+from ..client import LibsqlError
+from ..client import Transaction
 from ..config import _Config
 from ..result import ResultSet
-from . import proto
-from .conn import HranaConn, HranaStream
-from .convert import (
-    _stmt_to_proto,
-    _result_set_from_proto,
-    _batch_to_proto,
-    _batch_results_from_proto,
-    _error_from_proto,
-)
 
 
 def _create_hrana_client(config: _Config) -> HranaClient:

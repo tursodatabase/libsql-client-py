@@ -1,7 +1,8 @@
 import asyncio
-import libsql_client
 import os
 import random
+
+import libsql_client
 
 
 async def main():

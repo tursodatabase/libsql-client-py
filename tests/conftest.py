@@ -1,7 +1,7 @@
 import os
+
 import pytest
 import pytest_asyncio
-import requests
 
 import libsql_client
 

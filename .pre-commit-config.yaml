@@ -22,6 +22,25 @@ repos:
         # tests/dbapi2 are copies from cpython-3.11.3, do not touch
         exclude: "^(tests/dbapi2|hrana-test-server)/"
 
+-   repo: https://github.com/sqlalchemyorg/zimports/
+    rev: v0.4.5
+    hooks:
+    -   id: zimports
+        exclude: "^(tests/dbapi2|libsql_client/dbapi2/_replace_modules_pythonpath|hrana-test-server)/"
+
+-   repo: https://github.com/pycqa/flake8
+    rev: 5.0.4
+    hooks:
+    -   id: flake8
+        additional_dependencies:
+          - flake8-import-order
+          - flake8-import-single
+          - flake8-builtins
+          - flake8-future-annotations
+          - flake8-docstrings
+          - flake8-rst-docstrings
+          - pygments
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.3.0
     hooks:

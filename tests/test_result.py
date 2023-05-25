@@ -1,11 +1,9 @@
-import libsql_client
 import pytest
-import sys
 
 
 @pytest.mark.asyncio
 async def test_blob(client):
-    rs = await client.execute(f"SELECT X'deadbeef'")
+    rs = await client.execute("SELECT X'deadbeef'")
     assert rs.rows[0][0] == b"\xde\xad\xbe\xef"
 
 

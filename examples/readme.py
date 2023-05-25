@@ -1,6 +1,7 @@
 import asyncio
-import libsql_client
 import os
+
+import libsql_client
 
 
 async def main():

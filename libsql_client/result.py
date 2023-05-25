@@ -1,6 +1,13 @@
 from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import Dict, Iterator, List, Optional, Tuple, Union, overload
+from typing import Dict
+from typing import Iterator
+from typing import List
+from typing import Optional
+from typing import overload
+from typing import Tuple
+from typing import Union
 
 Value = Union[None, str, int, float, bytes]
 
@@ -8,7 +15,8 @@ Value = Union[None, str, int, float, bytes]
 class ResultSet:
     """Result of an SQL statement.
 
-    The result is composed of columns and rows. Every row is represented as a `Row` object and the length of
+    The result is composed of columns and rows.
+    Every row is represented as a `Row` object and the length of
     every row is equal to the number of columns.
     """
 

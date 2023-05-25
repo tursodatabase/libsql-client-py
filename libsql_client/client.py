@@ -1,10 +1,18 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from collections.abc import Sequence
-from datetime import datetime
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, TypeVar, Union
 
-from .result import ResultSet, Value
+from abc import ABC
+from abc import abstractmethod
+from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import TYPE_CHECKING
+from typing import TypeVar
+from typing import Union
+
+from .result import ResultSet
+from .result import Value
 
 if TYPE_CHECKING:
     from _typeshed import ReadableBuffer
@@ -31,7 +39,8 @@ class Statement:
                 return Statement(stmt[0], args)
             if len(stmt) > 2:
                 raise TypeError(
-                    f"Statement must be a 1-tuple or 2-tuple, but got a {len(stmt)}-tuple"
+                    "Statement must be a 1-tuple or 2-tuple, "
+                    f"but got a {len(stmt)}-tuple"
                 )
             if args:
                 raise TypeError(

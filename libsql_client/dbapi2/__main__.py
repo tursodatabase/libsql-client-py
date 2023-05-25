@@ -1,6 +1,6 @@
-import sys
 import os
 import os.path
+import sys
 
 args = sys.argv[1:]
 env = os.environ

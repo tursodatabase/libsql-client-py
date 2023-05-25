@@ -1,47 +1,44 @@
-import aiohttp
+from __future__ import annotations
+
 import asyncio
 import collections.abc
-import urllib.parse
 import sqlite3.dbapi2
 import sys
+from typing import Awaitable
+from typing import Callable
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import overload
+from typing import Tuple
+from typing import Type
+from typing import TYPE_CHECKING
+from typing import TypeVar
+import urllib.parse
 
-from typing import (
-    Awaitable,
-    Callable,
-    Iterable,
-    List,
-    Optional,
-    overload,
-    Tuple,
-    TYPE_CHECKING,
-    Type,
-    TypeVar,
-)
+import aiohttp
 from typing_extensions import ParamSpec
 
-from ..hrana.conn import HranaConn, HranaStream
-from ..hrana.proto import (
-    Batch,
-    BatchResult,
-    BatchStep,
-    Error as ErrorResult,
-    Stmt,
-    StmtResult,
-)
-from ..hrana.convert import _value_to_proto, _error_from_proto
-
-from ..config import _expand_config
-from .types import (
-    Autocommit,
-    Connection,
-    Cursor,
-    IsolationLevel,
-    LEGACY_TRANSACTION_CONTROL,
-    OperationalError,
-    RawExecuteResult,
-    SqlParameters,
-)
 from ._async_executor import AsyncExecutor
+from .types import Autocommit
+from .types import Connection
+from .types import Cursor
+from .types import IsolationLevel
+from .types import LEGACY_TRANSACTION_CONTROL
+from .types import OperationalError
+from .types import RawExecuteResult
+from .types import SqlParameters
+from ..config import _expand_config
+from ..hrana.conn import HranaConn
+from ..hrana.conn import HranaStream
+from ..hrana.convert import _error_from_proto
+from ..hrana.convert import _value_to_proto
+from ..hrana.proto import Batch
+from ..hrana.proto import BatchResult
+from ..hrana.proto import BatchStep
+from ..hrana.proto import Error as ErrorResult
+from ..hrana.proto import Stmt
+from ..hrana.proto import StmtResult
 
 
 # TODO: we're creating a whole sync client for each connection, but we
@@ -52,15 +49,6 @@ from ._async_executor import AsyncExecutor
 
 P = ParamSpec("P")
 T = TypeVar("T")
-
-if sys.version_info[:2] >= (3, 9):
-    FutureStmtResult = asyncio.Future[StmtResult]
-    FutureBatchResult = asyncio.Future[BatchResult]
-    FutureNone = asyncio.Future[None]
-else:
-    FutureStmtResult = asyncio.Future
-    FutureBatchResult = asyncio.Future
-    FutureNone = asyncio.Future
 
 
 def _create_hrana_connection(
@@ -315,7 +303,7 @@ class ConnectionHrana(Connection):
         stream.close()
 
     @run_in_executor
-    def _raw_execute(self, stmt: Stmt) -> FutureStmtResult:
+    def _raw_execute(self, stmt: Stmt) -> asyncio.Future[StmtResult]:
         assert self._stream is not None
         return self._stream.execute(stmt)
 
@@ -330,12 +318,12 @@ class ConnectionHrana(Connection):
         return self._conn.close_sql(sql_id)
 
     @run_in_executor
-    def _raw_execute_script(self, sql_script: str) -> FutureNone:
+    def _raw_execute_script(self, sql_script: str) -> asyncio.Future[None]:
         assert self._stream is not None
         return self._stream.sequence(sql_script)
 
     @run_in_executor
-    def _raw_batch(self, batch: Batch) -> FutureBatchResult:
+    def _raw_batch(self, batch: Batch) -> asyncio.Future[BatchResult]:
         assert self._stream is not None
         return self._stream.batch(batch)
 

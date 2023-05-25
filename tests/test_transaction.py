@@ -1,5 +1,6 @@
-import libsql_client
 import pytest
+
+import libsql_client
 
 
 async def _assert_closed(t):
@@ -102,7 +103,7 @@ async def test_error_does_not_rollback(transaction_client):
 
     with transaction_client.transaction() as t:
         await t.execute("INSERT INTO t VALUES ('one')")
-        with pytest.raises(libsql_client.LibsqlError) as excinfo:
+        with pytest.raises(libsql_client.LibsqlError):
             await t.execute("SELECT foobar")
         await t.execute("INSERT INTO t VALUES ('two')")
         await t.commit()
