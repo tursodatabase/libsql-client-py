@@ -8,18 +8,28 @@ from .client import Client, InArgs, InStatement, LibsqlError, Transaction
 from .config import _Config
 from .hrana import proto
 from .hrana.convert import (
-    _stmt_to_proto, _result_set_from_proto,
-    _batch_to_proto, _batch_results_from_proto,
+    _stmt_to_proto,
+    _result_set_from_proto,
+    _batch_to_proto,
+    _batch_results_from_proto,
 )
 from .result import ResultSet
 
+
 def _create_http_client(config: _Config) -> HttpClient:
     assert config.scheme in ("http", "https")
-    url = urllib.parse.urlunparse((
-        config.scheme, config.authority, config.path,
-        "", "", "",
-    ))
+    url = urllib.parse.urlunparse(
+        (
+            config.scheme,
+            config.authority,
+            config.path,
+            "",
+            "",
+            "",
+        )
+    )
     return HttpClient(url, auth_token=config.auth_token)
+
 
 class HttpClient(Client):
     _session: aiohttp.ClientSession
@@ -82,20 +92,35 @@ class HttpClient(Client):
                         f"Server returned HTTP status {resp.status} and error: {resp_text!r}",
                         "SERVER_ERROR",
                     )
-                raise LibsqlError(f"Server returned HTTP status {resp.status}", "SERVER_ERROR")
+                raise LibsqlError(
+                    f"Server returned HTTP status {resp.status}", "SERVER_ERROR"
+                )
 
             return await resp.json()
 
-_ExecuteReq = TypedDict("_ExecuteReq", {
-    "stmt": proto.Stmt,
-})
-_ExecuteResp = TypedDict("_ExecuteResp", {
-    "result": proto.StmtResult,
-})
 
-_BatchReq = TypedDict("_BatchReq", {
-    "batch": proto.Batch,
-})
-_BatchResp = TypedDict("_BatchResp", {
-    "result": proto.BatchResult,
-})
+_ExecuteReq = TypedDict(
+    "_ExecuteReq",
+    {
+        "stmt": proto.Stmt,
+    },
+)
+_ExecuteResp = TypedDict(
+    "_ExecuteResp",
+    {
+        "result": proto.StmtResult,
+    },
+)
+
+_BatchReq = TypedDict(
+    "_BatchReq",
+    {
+        "batch": proto.Batch,
+    },
+)
+_BatchResp = TypedDict(
+    "_BatchResp",
+    {
+        "result": proto.BatchResult,
+    },
+)

@@ -4,6 +4,7 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union, overload
 
 Value = Union[None, str, int, float, bytes]
 
+
 class ResultSet:
     """Result of an SQL statement.
 
@@ -36,9 +37,12 @@ class ResultSet:
         return len(self._rows)
 
     @overload
-    def __getitem__(self, key: int) -> Row: pass
+    def __getitem__(self, key: int) -> Row:
+        pass
+
     @overload
-    def __getitem__(self, key: slice) -> List[Row]: pass
+    def __getitem__(self, key: slice) -> List[Row]:
+        pass
 
     def __getitem__(self, key: Union[int, slice]) -> Union[Row, List[Row]]:
         return self._rows[key]
@@ -59,6 +63,7 @@ class ResultSet:
     def last_insert_rowid(self) -> Optional[int]:
         return self._last_insert_rowid
 
+
 class Row(Sequence):
     """A row returned by an SQL statement.
 
@@ -74,13 +79,20 @@ class Row(Sequence):
         self._values = values
 
     @overload
-    def __getitem__(self, key: int) -> Value: pass
-    @overload
-    def __getitem__(self, key: str) -> Value: pass
-    @overload
-    def __getitem__(self, key: slice) -> Tuple[Value, ...]: pass
+    def __getitem__(self, key: int) -> Value:
+        pass
 
-    def __getitem__(self, key: Union[int, str, slice]) -> Union[Value, Tuple[Value, ...]]:
+    @overload
+    def __getitem__(self, key: str) -> Value:
+        pass
+
+    @overload
+    def __getitem__(self, key: slice) -> Tuple[Value, ...]:
+        pass
+
+    def __getitem__(
+        self, key: Union[int, str, slice]
+    ) -> Union[Value, Tuple[Value, ...]]:
         """Access a value by index or by name."""
         tuple_key: Union[int, slice]
         if isinstance(key, str):

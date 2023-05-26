@@ -1,9 +1,11 @@
 import libsql_client
 import pytest
 
+
 @pytest.fixture(params=[".close_ws", ".close_tcp"])
 def trigger_net_error(request):
     return request.param
+
 
 @pytest.mark.asyncio
 async def test_execute(ws_client, trigger_net_error):
@@ -14,6 +16,7 @@ async def test_execute(ws_client, trigger_net_error):
     rs = await ws_client.execute("SELECT 42")
     assert rs[0].astuple() == (42,)
 
+
 @pytest.mark.asyncio
 async def test_batch(ws_client, trigger_net_error):
     with pytest.raises(libsql_client.LibsqlError) as excinfo:
@@ -22,6 +25,7 @@ async def test_batch(ws_client, trigger_net_error):
 
     rs = await ws_client.execute("SELECT 42")
     assert rs[0].astuple() == (42,)
+
 
 @pytest.mark.asyncio
 async def test_transaction(ws_client, trigger_net_error):

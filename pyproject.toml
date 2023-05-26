@@ -38,6 +38,12 @@ disallow_untyped_calls = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
+[tool.black]
+line-length = 88
+target-version = ['py37']
+# tests/dbapi2 are copies from cpython-3.11.3, do not touch
+force-exclude = "(tests/dbapi2|hrana-test-server)/"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

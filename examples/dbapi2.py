@@ -31,12 +31,14 @@ def main():
         uri=True,
         detect_types=dbapi2.PARSE_COLNAMES | dbapi2.PARSE_DECLTYPES,
     )
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,
             email TEXT NOT NULL UNIQUE
         )
-        """)
+        """
+    )
 
     print("\n# iterdump")
     for stmt in conn.iterdump():
@@ -45,18 +47,17 @@ def main():
     print("\n# execute")
 
     print("\n>>> execute: no arguments, multiple values (rowcount)")
-    cursor = conn.execute("""
+    cursor = conn.execute(
+        """
         INSERT INTO users (email) VALUES
             ('alice@libsql.org'),
             ('bob@example.com')
-        """)
+        """
+    )
     print(f"inserted rowid: {cursor.lastrowid}, affected: {cursor.rowcount}")
 
     print("\n>>> execute: with positional arguments")
-    cursor = conn.execute(
-        "INSERT INTO users (email) VALUES (?)",
-        ("rob@other.com",)
-    )
+    cursor = conn.execute("INSERT INTO users (email) VALUES (?)", ("rob@other.com",))
     print(f"inserted rowid: {cursor.lastrowid}, affected: {cursor.rowcount}")
 
     print("\n>>> execute: with named arguments")
@@ -115,10 +116,12 @@ def main():
     conn.execute("DROP TABLE test")
 
     print("\n>>> based on column names: 'd [date]', 'ts [timestamp]'")
-    cursor.execute("""
+    cursor.execute(
+        """
         select current_date as "d [date]",
         current_timestamp as "ts [timestamp]"
-    """)
+    """
+    )
     show_rows(cursor)
 
     # https://docs.python.org/3/library/sqlite3.html#how-to-convert-sqlite-values-to-custom-python-types

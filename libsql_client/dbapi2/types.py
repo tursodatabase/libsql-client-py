@@ -42,6 +42,7 @@ from ._reexports import (
     ProgrammingError,
     SQLITE_LIMIT_SQL_LENGTH,
 )
+
 if sys.version_info[:2] >= (3, 11):
     from ._reexports import Blob
 
@@ -72,7 +73,10 @@ else:
 PathLike = Union[str, bytes, os.PathLike]
 IsolationLevel = Literal["", "DEFERRED", "EXCLUSIVE", "IMMEDIATE"]
 isolation_level_set: Set[IsolationLevel] = {
-    "", "DEFERRED", "EXCLUSIVE", "IMMEDIATE",
+    "",
+    "DEFERRED",
+    "EXCLUSIVE",
+    "IMMEDIATE",
 }
 
 SqlNativeType = Union[None, int, float, str, bytes]
@@ -83,10 +87,7 @@ RowFactory = Callable[["Cursor", Iterable[Any]], Any]
 TextFactory = Callable[[bytes], Any]
 ConverterCallback = Callable[[Any], Any]
 
-AuthorizerCallback = Callable[
-    ...,
-    int  # SQLITE_OK, SQLITE_DENY, or SQLITE_IGNORE
-]
+AuthorizerCallback = Callable[..., int]  # SQLITE_OK, SQLITE_DENY, or SQLITE_IGNORE
 ProgressHandler = Callable[[], int]
 TraceCallback = Callable[[str], None]
 BackupProgressCallback = Callable[[int, int, int], None]
@@ -134,8 +135,9 @@ def check_valid_autocommit(value: Any) -> Autocommit:
     ":meta private:"
     if value is LEGACY_TRANSACTION_CONTROL or isinstance(value, bool):
         return value
-    raise ValueError("autocommit must be True, False, or "
-                     "sqlite3.LEGACY_TRANSACTION_CONTROL")
+    raise ValueError(
+        "autocommit must be True, False, or " "sqlite3.LEGACY_TRANSACTION_CONTROL"
+    )
 
 
 _callback_tracebacks: bool = False
@@ -152,15 +154,16 @@ class RawExecuteResult:
 
     :meta private:
     """
+
     results: List[Optional[RawResults]]
     errors: List[Optional[BaseException]]
     _idx: int
     __slots__ = ("results", "errors", "_idx")
 
     def __init__(
-            self,
-            results: List[Optional[RawResults]],
-            errors: List[Optional[BaseException]],
+        self,
+        results: List[Optional[RawResults]],
+        errors: List[Optional[BaseException]],
     ) -> None:
         assert len(results) == len(errors)
         self.results = results
@@ -188,10 +191,15 @@ class Statement:
     __slots__ = ("sql", "tokens", "is_dml", "is_ddl")
 
     _dml_statements: ClassVar[Set[str]] = {
-        "INSERT", "UPDATE", "DELETE", "REPLACE",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "REPLACE",
     }
     _ddl_statements: ClassVar[Set[str]] = {
-        "CREATE", "ALTER", "DROP",
+        "CREATE",
+        "ALTER",
+        "DROP",
     }
 
     @overload
@@ -274,6 +282,7 @@ def check_thread(fn: Callable[P, T]) -> Callable[P, T]:
 
     :meta private:
     """
+
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         self = args[0]
         assert len(args) > 0 and isinstance(self, Connection)
@@ -290,6 +299,7 @@ def check_connection(fn: Callable[P, T]) -> Callable[P, T]:
 
     :meta private:
     """
+
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         self = args[0]
         assert len(args) > 0 and isinstance(self, Connection)
@@ -304,6 +314,7 @@ class Connection(metaclass=ABCMeta):
 
     :meta private:
     """
+
     _closed: bool
     _thread: Optional[int]
     _database: str
@@ -338,9 +349,9 @@ class Connection(metaclass=ABCMeta):
         self._timeout = timeout
         self._detect_types = detect_types
         self._check_same_thread = check_same_thread
-        self._cached_statement_getter = functools.lru_cache(
-            cached_statements
-        )(self.__call__)
+        self._cached_statement_getter = functools.lru_cache(cached_statements)(
+            self.__call__
+        )
         self._in_transaction = False
         self._cursors = WeakSet()
         self.row_factory = None
@@ -376,11 +387,12 @@ class Connection(metaclass=ABCMeta):
         if check:
             current_ident = threading.current_thread().ident
             if self._thread != current_ident:
-                msg = "SQLite objects created in a thread can only be used " \
-                      "in that same thread. " \
-                      "The object was created in thread id " \
-                      "%s and this is thread id %s." \
-                      % (self._thread, current_ident)
+                msg = (
+                    "SQLite objects created in a thread can only be used "
+                    "in that same thread. "
+                    "The object was created in thread id "
+                    "%s and this is thread id %s." % (self._thread, current_ident)
+                )
                 raise ProgrammingError(msg)
         elif check is None:
             raise ProgrammingError("Base Connection.__init__ not called")
@@ -398,10 +410,10 @@ class Connection(metaclass=ABCMeta):
         return self
 
     def __exit__(
-            self,
-            exc_type: Any,
-            exc_value: Any,
-            traceback: Any,
+        self,
+        exc_type: Any,
+        exc_value: Any,
+        traceback: Any,
     ) -> Literal[False]:
         # https://docs.python.org/3/library/sqlite3.html#how-to-use-the-connection-context-manager
         # https://github.com/python/cpython/blob/main/Modules/_sqlite/connection.c#L2262
@@ -506,7 +518,8 @@ class Connection(metaclass=ABCMeta):
     @check_thread
     @check_connection
     def cursor(
-        self, *args: CursorFactory,
+        self,
+        *args: CursorFactory,
         **kwargs: CursorFactory,
     ) -> "Cursor":
         if args:
@@ -549,10 +562,12 @@ class Connection(metaclass=ABCMeta):
     def _begin_transaction_if_needed(self, statement: Statement) -> None:
         # _pysqlite_query_execute()
         # https://github.com/python/cpython/blob/main/Modules/_sqlite/cursor.c#L867-L877
-        if self._autocommit is LEGACY_TRANSACTION_CONTROL \
-           and self.isolation_level is not None \
-           and statement.is_dml \
-           and self._sqlite3_get_autocommit():
+        if (
+            self._autocommit is LEGACY_TRANSACTION_CONTROL
+            and self.isolation_level is not None
+            and statement.is_dml
+            and self._sqlite3_get_autocommit()
+        ):
             self._begin_transaction()
 
     _begin_transaction_tokens: ClassVar[Set[str]] = {"BEGIN"}
@@ -618,17 +633,17 @@ class Connection(metaclass=ABCMeta):
         pass
 
     def execute(
-            self,
-            sql: str,
-            parameters: SqlParameters = (),
+        self,
+        sql: str,
+        parameters: SqlParameters = (),
     ) -> "Cursor":
         "See :py:meth:`sqlite3.Connection.execute`"
         return self.cursor().execute(sql, parameters)
 
     def executemany(
-            self,
-            sql: str,
-            parameters: Iterable[SqlParameters],
+        self,
+        sql: str,
+        parameters: Iterable[SqlParameters],
     ) -> "Cursor":
         "See :py:meth:`sqlite3.Connection.executemany`"
         return self.cursor().executemany(sql, parameters)
@@ -651,8 +666,8 @@ class Connection(metaclass=ABCMeta):
     @check_thread
     @check_connection
     def set_trace_callback(
-            self,
-            trace_callback: Optional[TraceCallback],
+        self,
+        trace_callback: Optional[TraceCallback],
     ) -> None:
         "See :py:meth:`sqlite3.Connection.set_trace_callback`"
         self._trace_callback = trace_callback
@@ -682,72 +697,74 @@ class Connection(metaclass=ABCMeta):
     # BEGIN: methods that are not supported when operating as RPC
 
     if sys.version_info[:2] >= (3, 11):
+
         def blobopen(
-                self,
-                table: str,
-                column: str,
-                row: str,
-                *,
-                readonly: bool = False,
-                name: str = "main",
+            self,
+            table: str,
+            column: str,
+            row: str,
+            *,
+            readonly: bool = False,
+            name: str = "main",
         ) -> Blob:
             "Unsupported by libsql_client.dbapi2"
             raise NotSupportedError()
 
     def create_function(
-            self,
-            name: str,
-            narg: int,
-            func: Optional[Callable[..., SqlNativeType]],
-            *,
-            deterministic: bool = False,
+        self,
+        name: str,
+        narg: int,
+        func: Optional[Callable[..., SqlNativeType]],
+        *,
+        deterministic: bool = False,
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # maybe one day support with WASM
         raise NotSupportedError()
 
     def create_aggregate(
-            self,
-            name: str,
-            n_arg: int,
-            aggregate_class: Optional[Callable[..., Any]],
+        self,
+        name: str,
+        n_arg: int,
+        aggregate_class: Optional[Callable[..., Any]],
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # maybe one day support with WASM
         raise NotSupportedError()
 
     if sys.version_info[:2] >= (3, 11):
+
         def create_window_function(
-                self,
-                name: str,
-                num_params: int,
-                aggregate_class: Optional[Callable[..., Any]],
+            self,
+            name: str,
+            num_params: int,
+            aggregate_class: Optional[Callable[..., Any]],
         ) -> None:
             "Unsupported by libsql_client.dbapi2"
             # maybe one day support with WASM
             raise NotSupportedError()
 
     def create_collation(
-            self,
-            name: str,
-            _callable: Optional[Callable[[str, str], int]],
+        self,
+        name: str,
+        _callable: Optional[Callable[[str, str], int]],
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # maybe one day support with WASM
         raise NotSupportedError()
 
     def set_authorizer(
-            self,
-            authorizer_callback: Optional[AuthorizerCallback],
+        self,
+        authorizer_callback: Optional[AuthorizerCallback],
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # maybe one day support with WASM
         raise NotSupportedError()
 
     def set_progress_handler(
-            self,
-            progress_handler: Optional[ProgressHandler],
-            n: int,
+        self,
+        progress_handler: Optional[ProgressHandler],
+        n: int,
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # not likely to be supported
@@ -764,19 +781,20 @@ class Connection(metaclass=ABCMeta):
         raise NotSupportedError()
 
     def backup(
-            self,
-            target: "Connection",
-            *,
-            pages: int = - 1,
-            progress: Optional[BackupProgressCallback] = None,
-            name: str = "main",
-            sleep: float = 0.250,
+        self,
+        target: "Connection",
+        *,
+        pages: int = -1,
+        progress: Optional[BackupProgressCallback] = None,
+        name: str = "main",
+        sleep: float = 0.250,
     ) -> None:
         "Unsupported by libsql_client.dbapi2"
         # not likely to be supported
         raise NotSupportedError()
 
     if sys.version_info[:2] >= (3, 11):
+
         def getlimit(self, category: int) -> int:
             "Unsupported by libsql_client.dbapi2"
             try:
@@ -819,8 +837,8 @@ RowCastMap = Tuple[Optional[ConverterCallback], ...]
 
 
 def tuple_row_factory(
-        cursor: "Cursor",
-        cells: Iterable[Any],
+    cursor: "Cursor",
+    cells: Iterable[Any],
 ) -> Tuple[Any, ...]:
     ":meta private:"
     return tuple(cells)
@@ -828,6 +846,7 @@ def tuple_row_factory(
 
 class Row(collections.abc.Sequence):
     """Implement :py:class:`sqlite3.Row`"""
+
     _description: CursorDescription
     _data: Tuple[Any, ...]
     __slots__ = ("_description", "_data")
@@ -900,6 +919,7 @@ def check_cursor(fn: Callable[P, T]) -> Callable[P, T]:
 
     :meta private:
     """
+
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         self = args[0]
         assert len(args) > 0 and isinstance(self, Cursor)
@@ -993,8 +1013,8 @@ def _get_value_bytes(value: proto.Value) -> Optional[bytes]:
 
 
 def _get_value_converted(
-        value: proto.Value,
-        text_factory: Optional[TextFactory],
+    value: proto.Value,
+    text_factory: Optional[TextFactory],
 ) -> Any:
     v = _value_from_proto(value)
     if not isinstance(v, str) or text_factory is None or text_factory is str:
@@ -1021,9 +1041,18 @@ class Cursor(metaclass=ABCMeta):
     _locked: bool
 
     __slots__ = (
-        "_connection", "_description", "_row_cast_map", "arraysize",
-        "_lastrowid", "_rowcount", "row_factory", "_rows", "_rows_iter_idx",
-        "_raw_results", "_closed", "_locked",
+        "_connection",
+        "_description",
+        "_row_cast_map",
+        "arraysize",
+        "_lastrowid",
+        "_rowcount",
+        "row_factory",
+        "_rows",
+        "_rows_iter_idx",
+        "_raw_results",
+        "_closed",
+        "_locked",
     )
 
     def __init__(self, connection: Connection) -> None:
@@ -1111,11 +1140,11 @@ class Cursor(metaclass=ABCMeta):
 
     @abstractmethod
     def _raw_execute(
-            self,
-            sql: str,
-            parameters: Iterable[SqlParameters],
-            *,
-            want_rows: bool = True,
+        self,
+        sql: str,
+        parameters: Iterable[SqlParameters],
+        *,
+        want_rows: bool = True,
     ) -> RawExecuteResult:
         # each system should implement this one
         raise NotImplementedError()
@@ -1151,9 +1180,9 @@ class Cursor(metaclass=ABCMeta):
         self._rows_iter_idx = 0
 
     def _convert_row(self, row: RawRow) -> Any:
-        row_factory = self.row_factory or \
-            self.connection.row_factory or \
-            tuple_row_factory
+        row_factory = (
+            self.row_factory or self.connection.row_factory or tuple_row_factory
+        )
 
         return row_factory(self, self._get_cells(row))
 
@@ -1190,8 +1219,8 @@ class Cursor(metaclass=ABCMeta):
     _row_decltype_parser_re = re.compile(r"^(?P<type_name>[^ (]+)")
 
     def _get_column_description_and_cast(
-            self,
-            col: RawColumn,
+        self,
+        col: RawColumn,
     ) -> Tuple[CursorColumnDescription, Optional[ConverterCallback]]:
         name = col.get("name") or ""
         converter: Optional[ConverterCallback] = None
@@ -1258,27 +1287,23 @@ class Cursor(metaclass=ABCMeta):
 
     def _adapt_params(self, parameters: SqlParameters) -> SqlParameters:
         if isinstance(parameters, collections.abc.Mapping):
-            return {
-                k: self._adapt_param_value(v)
-                for k, v in parameters.items()
-            }
+            return {k: self._adapt_param_value(v) for k, v in parameters.items()}
         elif parameters:
             # SupportsLenAndGetItem is only __len__ + __getitem__, no __iter__
             # so create the list manually :-(
             return [
-                self._adapt_param_value(parameters[i])
-                for i in range(len(parameters))
+                self._adapt_param_value(parameters[i]) for i in range(len(parameters))
             ]
         return parameters
 
     @check_cursor
     def _query_execute(
-            self,
-            sql: str,
-            parameters: Iterable[SqlParameters] = ((),),
-            *,
-            multiple: bool = False,
-            want_rows: bool = True,
+        self,
+        sql: str,
+        parameters: Iterable[SqlParameters] = ((),),
+        *,
+        multiple: bool = False,
+        want_rows: bool = True,
     ) -> Self:
         if not isinstance(sql, str):
             # required by test CursorTests.test_execute_many_wrong_sql_arg()
@@ -1306,7 +1331,9 @@ class Cursor(metaclass=ABCMeta):
             # so do not lock before this point!
             self._locked = True
             self._raw_results = self._raw_execute(
-                sql, params, want_rows=want_rows,
+                sql,
+                params,
+                want_rows=want_rows,
             )
             for result, error in self._raw_results:
                 if error is not None:
@@ -1321,22 +1348,22 @@ class Cursor(metaclass=ABCMeta):
             self._locked = False
 
     def execute(
-            self,
-            sql: str,
-            parameters: SqlParameters = (),
+        self,
+        sql: str,
+        parameters: SqlParameters = (),
     ) -> Self:
         "See :py:meth:`sqlite3.Cursor.execute`"
-        if not isinstance(parameters, collections.abc.Mapping) and \
-                not (hasattr(parameters, "__len__")
-                     and hasattr(parameters, "__getitem__")):
+        if not isinstance(parameters, collections.abc.Mapping) and not (
+            hasattr(parameters, "__len__") and hasattr(parameters, "__getitem__")
+        ):
             raise ProgrammingError("parameters are of unsupported type")
         self._query_execute(sql, (parameters,), multiple=False, want_rows=True)
         return self
 
     def executemany(
-            self,
-            sql: str,
-            parameters: Iterable[SqlParameters],
+        self,
+        sql: str,
+        parameters: Iterable[SqlParameters],
     ) -> Self:
         "See :py:meth:`sqlite3.Cursor.executemany`"
         self._query_execute(sql, parameters, multiple=True, want_rows=False)

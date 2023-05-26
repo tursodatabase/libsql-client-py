@@ -18,6 +18,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 from ._utils import log_obj, log_prefix
+
 _logger = logging.getLogger(__name__)
 _log_obj = functools.partial(log_obj, _logger)
 _log_prefix = functools.partial(log_prefix, _logger)
@@ -79,11 +80,7 @@ class AsyncExecutor(threading.Thread):
         self._control = None
         q: MainQueue = queue.Queue(1)
         log_prefix = f"<{self.__class__.__name__} at {id(self):x}>"
-        super().__init__(
-            daemon=True,
-            target=_thread_main,
-            args=(log_prefix, q)
-        )
+        super().__init__(daemon=True, target=_thread_main, args=(log_prefix, q))
         self._inf("created")
         self.start()
         self._lock = threading.Lock()
@@ -129,6 +126,7 @@ class AsyncExecutor(threading.Thread):
         self._inf("thread did stop")
 
     if sys.version_info[:2] >= (3, 9):
+
         @overload
         def submit(
             self,
@@ -157,6 +155,7 @@ class AsyncExecutor(threading.Thread):
             ...
 
     else:
+
         @overload
         def submit(
             self,
@@ -210,13 +209,19 @@ class AsyncExecutor(threading.Thread):
                     r = await r
                 self._dbg(
                     "finished: %s, args=%s, kwargs=%s, result=%s",
-                    fn, args, kwargs, r,
+                    fn,
+                    args,
+                    kwargs,
+                    r,
                 )
                 return r
             except Exception as e:
                 self._dbg(
                     "failed: %s, args=%s, kwargs=%s, exc=%s",
-                    fn, args, kwargs, e,
+                    fn,
+                    args,
+                    kwargs,
+                    e,
                     exc_info=e,
                 )
                 raise

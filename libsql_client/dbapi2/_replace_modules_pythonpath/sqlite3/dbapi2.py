@@ -16,5 +16,6 @@ del sys.modules[sqlite3_modname]
 del sys.modules[sqlite3_dbapi2_modname]
 
 import libsql_client.dbapi2 as wrapper_dbapi2  # noqa: I900,E402
+
 sys.modules[sqlite3_modname] = wrapper_dbapi2
 sys.modules[sqlite3_dbapi2_modname] = wrapper_dbapi2

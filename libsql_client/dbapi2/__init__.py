@@ -6,7 +6,7 @@ drop-in replacement. Whenever explicitly undocumented, please refer its
 documentation.
 
 """
-__docformat__ = 'reStructuredText en'
+__docformat__ = "reStructuredText en"
 
 
 import sqlite3.dbapi2
@@ -43,15 +43,15 @@ _uri_forced_databases_prefixes = ("libsql://", "ws://", "wss://")
 
 
 def connect(
-        database: PathLike,
-        timeout: float = 5.0,
-        detect_types: int = 0,
-        isolation_level: Optional[IsolationLevel] = "",
-        check_same_thread: bool = True,
-        factory: Optional[ConnectFactory] = None,
-        cached_statements: int = 128,
-        uri: bool = False,
-        **kwargs: Any,
+    database: PathLike,
+    timeout: float = 5.0,
+    detect_types: int = 0,
+    isolation_level: Optional[IsolationLevel] = "",
+    check_same_thread: bool = True,
+    factory: Optional[ConnectFactory] = None,
+    cached_statements: int = 128,
+    uri: bool = False,
+    **kwargs: Any,
 ) -> ConnectionTypes:
     """
     Open a connection to an SQLite (local) or sqld (remote) database.

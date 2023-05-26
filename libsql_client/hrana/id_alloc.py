@@ -1,5 +1,6 @@
 from typing import Set
 
+
 # An allocator of non-negative integer ids.
 #
 # This clever data structure has these "ideal" properties:

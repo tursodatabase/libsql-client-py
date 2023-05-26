@@ -3,24 +3,27 @@ import libsql_client
 import os
 import random
 
+
 async def main():
     url = os.getenv("URL", "file:local.db")
     async with libsql_client.create_client(url) as client:
-        await client.batch([
-            """
+        await client.batch(
+            [
+                """
             CREATE TABLE IF NOT EXISTS book (
                 id INTEGER PRIMARY KEY,
                 title TEXT NOT NULL,
                 author_id INTEGER NOT NULL
             )
             """,
-            """
+                """
             CREATE TABLE IF NOT EXISTS author (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
             )
             """,
-        ])
+            ]
+        )
 
         author_res = await client.execute(
             "INSERT INTO author (name) VALUES (?) RETURNING id",
@@ -46,25 +49,52 @@ async def main():
         for row in books_res.rows:
             print(row)
 
+
 def sample_name(name_parts):
-    return " ".join([
-        random.choice(parts)
-        for parts in name_parts
-    ])
+    return " ".join([random.choice(parts) for parts in name_parts])
+
 
 AUTHOR_NAME_PARTS = [
     ["Daniel", "Jane", "Mark", "William", "Milan", "Kazuo", "Sally", "Mieko", "Kim"],
-    ["Defoe", "Austen", "Twain", "Golding", "Kundera", "Ishiguro", "Rooney", "Kawakami", "Hye-Jin"],
+    [
+        "Defoe",
+        "Austen",
+        "Twain",
+        "Golding",
+        "Kundera",
+        "Ishiguro",
+        "Rooney",
+        "Kawakami",
+        "Hye-Jin",
+    ],
 ]
 
 BOOK_TITLE_PARTS = [
     [
-        "Robinson", "Pride", "Sense", "Huckleberry", "Tom", "Lord",
-        "Život", "Klara", "Normal", "Breasts", "Concerning",
+        "Robinson",
+        "Pride",
+        "Sense",
+        "Huckleberry",
+        "Tom",
+        "Lord",
+        "Život",
+        "Klara",
+        "Normal",
+        "Breasts",
+        "Concerning",
     ],
     [
-        "Crusoe", "and Prejudice", "and Sensibility", "Finn", "Sawyer", "of the Flies",
-        "je jinde", "and The Sun", "People", "and Eggs", "My Daughter",
+        "Crusoe",
+        "and Prejudice",
+        "and Sensibility",
+        "Finn",
+        "Sawyer",
+        "of the Flies",
+        "je jinde",
+        "and The Sun",
+        "People",
+        "and Eggs",
+        "My Daughter",
     ],
 ]
 

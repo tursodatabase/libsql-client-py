@@ -6,17 +6,25 @@ import math
 import sqlite3
 
 from .client import (
-    Client, InArgs, InStatement, InValue,
-    LibsqlError, Statement, Transaction,
+    Client,
+    InArgs,
+    InStatement,
+    InValue,
+    LibsqlError,
+    Statement,
+    Transaction,
     _normalize_value,
 )
 from .config import _Config
 from .result import ResultSet, Row, Value
 
+
 def _create_sqlite3_client(config: _Config) -> Sqlite3Client:
     assert config.scheme == "file"
     if config.authority not in ("", "localhost"):
-        raise LibsqlError(f"Invalid authority in file URL: {config.authority!r}", "URL_INVALID")
+        raise LibsqlError(
+            f"Invalid authority in file URL: {config.authority!r}", "URL_INVALID"
+        )
 
     client = Sqlite3Client(config.path)
     db = client._connect()
@@ -27,12 +35,13 @@ def _create_sqlite3_client(config: _Config) -> Sqlite3Client:
 
     return client
 
+
 class Sqlite3Client(Client):
     _path: str
     _closed: bool
 
     def __init__(self, path: str):
-        self._path = path;
+        self._path = path
         self._closed = False
 
     async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet:
@@ -81,6 +90,7 @@ class Sqlite3Client(Client):
             timeout=0,
         )
 
+
 class Sqlite3Transaction(Transaction):
     database: Optional[sqlite3.Connection]
 
@@ -116,13 +126,19 @@ class Sqlite3Transaction(Transaction):
             raise LibsqlError("The transaction was closed", "TRANSACTION_CLOSED")
         return self.database
 
-def _execute_stmt(db: sqlite3.Connection, in_stmt: InStatement, in_args: InArgs = None) -> ResultSet:
+
+def _execute_stmt(
+    db: sqlite3.Connection, in_stmt: InStatement, in_args: InArgs = None
+) -> ResultSet:
     stmt = Statement.convert(in_stmt, in_args)
     sql_args: Any
     if stmt.args is None:
         sql_args = ()
     elif isinstance(stmt.args, dict):
-        sql_args = {_strip_arg_name(key): _value_to_sql(value) for key, value in stmt.args.items()}
+        sql_args = {
+            _strip_arg_name(key): _value_to_sql(value)
+            for key, value in stmt.args.items()
+        }
     else:
         sql_args = [_value_to_sql(value) for value in stmt.args]
 
@@ -150,10 +166,12 @@ def _execute_stmt(db: sqlite3.Connection, in_stmt: InStatement, in_args: InArgs 
     finally:
         cursor.close()
 
+
 def _strip_arg_name(name: str) -> str:
     if len(name) >= 1 and name[0] in (":", "$", "@"):
         return name[1:]
     return name
+
 
 def _value_to_sql(value: InValue) -> Any:
     if isinstance(value, float) and not math.isfinite(value):

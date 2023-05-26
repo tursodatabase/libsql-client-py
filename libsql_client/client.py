@@ -15,6 +15,7 @@ InValue = Union[Value, bool, datetime, ReadableBuffer]
 InArgs = Union[List[InValue], Tuple[InValue, ...], Dict[str, InValue], None]
 InStatement = Union["Statement", str, Tuple[str], Tuple[str, InArgs]]
 
+
 class Statement:
     sql: str
     args: InArgs
@@ -29,15 +30,20 @@ class Statement:
             if len(stmt) == 1:
                 return Statement(stmt[0], args)
             if len(stmt) > 2:
-                raise TypeError(f"Statement must be a 1-tuple or 2-tuple, but got a {len(stmt)}-tuple")
+                raise TypeError(
+                    f"Statement must be a 1-tuple or 2-tuple, but got a {len(stmt)}-tuple"
+                )
             if args:
-                raise TypeError("Cannot pass additional args to a statement passed as tuple")
-            return Statement(stmt[0], stmt[1]) # type: ignore[misc]
+                raise TypeError(
+                    "Cannot pass additional args to a statement passed as tuple"
+                )
+            return Statement(stmt[0], stmt[1])  # type: ignore[misc]
         if isinstance(stmt, Statement):
             if args:
                 raise TypeError("Cannot pass additional args to a Statement instance")
             return stmt
         return Statement(stmt, args)
+
 
 class LibsqlError(RuntimeError):
     code: str
@@ -46,24 +52,31 @@ class LibsqlError(RuntimeError):
         super(RuntimeError, self).__init__(f"{code}: {message}")
         self.code = code
 
+
 TClient = TypeVar("TClient", bound="Client")
+
 
 class Client(ABC):
     @abstractmethod
-    async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet: pass
+    async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet:
+        pass
 
     @abstractmethod
-    async def batch(self, stmts: List[InStatement]) -> List[ResultSet]: pass
+    async def batch(self, stmts: List[InStatement]) -> List[ResultSet]:
+        pass
 
     @abstractmethod
-    def transaction(self) -> Transaction: pass
+    def transaction(self) -> Transaction:
+        pass
 
     @abstractmethod
-    async def close(self) -> None: pass
+    async def close(self) -> None:
+        pass
 
     @property
     @abstractmethod
-    def closed(self) -> bool: pass
+    def closed(self) -> bool:
+        pass
 
     async def __aenter__(self: TClient) -> TClient:
         return self
@@ -71,30 +84,38 @@ class Client(ABC):
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.close()
 
+
 TTransaction = TypeVar("TTransaction", bound="Transaction")
+
 
 class Transaction(ABC):
     @abstractmethod
-    async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet: ...
+    async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet:
+        ...
 
     @abstractmethod
-    async def rollback(self) -> None: ...
+    async def rollback(self) -> None:
+        ...
 
     @abstractmethod
-    async def commit(self) -> None: ...
+    async def commit(self) -> None:
+        ...
 
     @abstractmethod
-    def close(self) -> None: ...
+    def close(self) -> None:
+        ...
 
     @property
     @abstractmethod
-    def closed(self) -> bool: ...
+    def closed(self) -> bool:
+        ...
 
     def __enter__(self: TTransaction) -> TTransaction:
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
+
 
 def _normalize_value(in_value: InValue) -> Value:
     if isinstance(in_value, datetime):

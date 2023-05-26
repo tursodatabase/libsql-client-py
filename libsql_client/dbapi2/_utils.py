@@ -4,23 +4,23 @@ from typing import List, Iterable, Optional, Sequence
 
 
 def log_prefix(
-        logger: logging.Logger,
-        prefix: str,
-        level: int,
-        msg: str,
-        *args: object,
-        exc_info: Optional[BaseException] = None,
+    logger: logging.Logger,
+    prefix: str,
+    level: int,
+    msg: str,
+    *args: object,
+    exc_info: Optional[BaseException] = None,
 ) -> None:
     logger.log(level, prefix + msg, *args, exc_info=exc_info)
 
 
 def log_obj(
-        logger: logging.Logger,
-        obj: object,
-        level: int,
-        msg: str,
-        *args: object,
-        exc_info: Optional[BaseException] = None,
+    logger: logging.Logger,
+    obj: object,
+    level: int,
+    msg: str,
+    *args: object,
+    exc_info: Optional[BaseException] = None,
 ) -> None:
     prefix = getattr(obj, "_log_prefix", None)
     if prefix is None:
@@ -95,7 +95,7 @@ _iter_sql_delim_chars = {";", ",", "(", ")", "[", "]"}
 _iter_sql_stop_chars = _lstrip_sql_whitespace_chars.union(
     _iter_sql_delim_chars,
 )
-_iter_sql_quote_chars = {"\"", "'"}
+_iter_sql_quote_chars = {'"', "'"}
 
 
 def _iter_sql_get_quoted_end(sql: str, pos: int, end_pos: int) -> int:

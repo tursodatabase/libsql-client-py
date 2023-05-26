@@ -2,10 +2,12 @@ import libsql_client
 import pytest
 import sys
 
+
 @pytest.mark.asyncio
 async def test_blob(client):
     rs = await client.execute(f"SELECT X'deadbeef'")
     assert rs.rows[0][0] == b"\xde\xad\xbe\xef"
+
 
 @pytest.mark.asyncio
 async def test_columns(client):
@@ -15,6 +17,7 @@ async def test_columns(client):
     assert row["a"] == 1
     assert row["b"] == 2
     assert row["c"] == 3
+
 
 @pytest.mark.asyncio
 async def test_rows(client):
@@ -33,25 +36,30 @@ async def test_rows(client):
         assert rs[i] is rs.rows[i]
     assert list(rs) == rs.rows
 
+
 @pytest.mark.asyncio
 async def test_row_repr(client):
     rs = await client.execute("SELECT 42, 0.5, 'brontosaurus', NULL")
     assert repr(rs.rows[0]) == "(42, 0.5, 'brontosaurus', None)"
+
 
 @pytest.mark.asyncio
 async def test_row_slice(client):
     rs = await client.execute("SELECT 'one', 'two', 'three', 'four', 'five'")
     assert rs.rows[0][1:3] == ("two", "three")
 
+
 @pytest.mark.asyncio
 async def test_row_tuple(client):
     rs = await client.execute("SELECT 'one', 'two', 'three'")
     assert tuple(rs.rows[0]) == ("one", "two", "three")
 
+
 @pytest.mark.asyncio
 async def test_row_astuple(client):
     rs = await client.execute("SELECT 'one', 'two', 'three'")
     assert rs.rows[0].astuple() == ("one", "two", "three")
+
 
 @pytest.mark.asyncio
 async def test_row_asdict(client):
@@ -59,11 +67,13 @@ async def test_row_asdict(client):
     assert rs.rows[0].asdict() == {"one": 1, "two": 2, "three": 3}
     assert rs.rows[0].asdict() == rs.rows[0]._asdict()
 
+
 try:
     import pandas
 except ImportError:
     pandas = None
 pandas_only = pytest.mark.skipif(pandas is None, reason="pandas not installed")
+
 
 @pytest.mark.asyncio
 @pandas_only
@@ -71,6 +81,7 @@ async def test_pandas_from_records(client):
     rs = await client.execute("SELECT 1, 'two', 3.0")
     data_frame = pandas.DataFrame.from_records(rs.rows)
     assert data_frame.shape == (1, 3)
+
 
 @pytest.mark.asyncio
 @pandas_only

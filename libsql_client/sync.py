@@ -12,6 +12,7 @@ from .result import ResultSet, Value
 
 T = TypeVar("T")
 
+
 def create_client_sync(*args: Any, **kwargs: Any) -> ClientSync:
     executor = _AsyncExecutor()
     try:
@@ -20,6 +21,7 @@ def create_client_sync(*args: Any, **kwargs: Any) -> ClientSync:
     except Exception:
         executor.close()
         raise
+
 
 class ClientSync:
     _executor: _AsyncExecutor
@@ -52,6 +54,7 @@ class ClientSync:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
 
+
 class TransactionSync:
     _executor: _AsyncExecutor
     _transaction: Transaction
@@ -74,7 +77,9 @@ class TransactionSync:
 
     @property
     def closed(self) -> bool:
-        return self._executor.submit_func_unless_closed(lambda: self._transaction.closed, lambda: True)
+        return self._executor.submit_func_unless_closed(
+            lambda: self._transaction.closed, lambda: True
+        )
 
     def __enter__(self) -> TransactionSync:
         return self
@@ -82,10 +87,12 @@ class TransactionSync:
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.close()
 
+
 @dataclass
 class _QueueItem:
     coroutine: Coroutine[Any, Any, Any]
     future: concurrent.futures.Future
+
 
 class _AsyncExecutor:
     _thread: threading.Thread
@@ -128,7 +135,9 @@ class _AsyncExecutor:
             self._closed = True
             for item in self._queue:
                 if item is not None:
-                    item.future.set_exception(LibsqlError("Client is closed", "CLIENT_CLOSED"))
+                    item.future.set_exception(
+                        LibsqlError("Client is closed", "CLIENT_CLOSED")
+                    )
             self._queue.clear()
 
     async def _dequeue_item(self) -> Optional[_QueueItem]:
@@ -146,8 +155,10 @@ class _AsyncExecutor:
         waker, self._waker = self._waker, None
         if waker is not None:
             waker_: asyncio.Future[None] = waker
+
             def resolve_waker() -> None:
                 waker_.set_result(None)
+
             self._loop.call_soon_threadsafe(resolve_waker)
 
     def submit_coro(self, coro: Coroutine[Any, Any, T]) -> T:
@@ -161,11 +172,15 @@ class _AsyncExecutor:
     def submit_func(self, func: Callable[[], T]) -> T:
         async def coro() -> T:
             return func()
+
         return self.submit_coro(coro())
 
-    def submit_func_unless_closed(self, on_open: Callable[[], T], on_closed: Callable[[], T]) -> T:
+    def submit_func_unless_closed(
+        self, on_open: Callable[[], T], on_closed: Callable[[], T]
+    ) -> T:
         async def on_open_coro() -> T:
             return on_open()
+
         with self._lock:
             if self._closed:
                 return on_closed()
@@ -173,7 +188,9 @@ class _AsyncExecutor:
             self._enqueue_item_with_lock(_QueueItem(on_open_coro(), fut))
         return fut.result()
 
-    def close_with_coro(self, coro_func: Callable[[], Coroutine[Any, Any, None]]) -> None:
+    def close_with_coro(
+        self, coro_func: Callable[[], Coroutine[Any, Any, None]]
+    ) -> None:
         with self._lock:
             if self._closed:
                 return
@@ -186,11 +203,13 @@ class _AsyncExecutor:
     def close(self) -> None:
         async def noop() -> None:
             return None
+
         self.close_with_coro(noop)
 
     def is_closed(self) -> bool:
         with self._lock:
             return self._closed
+
 
 # this is copied from CPython's Lib/asyncio/runners.py
 def _cancel_all_tasks(loop: asyncio.AbstractEventLoop) -> None:
@@ -207,8 +226,10 @@ def _cancel_all_tasks(loop: asyncio.AbstractEventLoop) -> None:
         if task.cancelled():
             continue
         if task.exception() is not None:
-            loop.call_exception_handler({
-                "message": "unhandled exception during _AsyncExecutor shutdown",
-                "exception": task.exception(),
-                "task": task,
-            })
+            loop.call_exception_handler(
+                {
+                    "message": "unhandled exception during _AsyncExecutor shutdown",
+                    "exception": task.exception(),
+                    "task": task,
+                }
+            )

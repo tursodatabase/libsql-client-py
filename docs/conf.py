@@ -25,5 +25,5 @@ html_theme = "sphinxdoc"
 html_static_path = ["_static"]
 
 intersphinx_mapping = {
-    'https://docs.python.org/3/': None,
+    "https://docs.python.org/3/": None,
 }

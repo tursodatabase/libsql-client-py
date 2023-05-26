@@ -1,5 +1,7 @@
 from .client import (
-    InValue, InStatement, InArgs,
+    InValue,
+    InStatement,
+    InArgs,
     Statement,
     LibsqlError,
     Client,

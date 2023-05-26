@@ -10,18 +10,28 @@ from ..result import ResultSet
 from . import proto
 from .conn import HranaConn, HranaStream
 from .convert import (
-    _stmt_to_proto, _result_set_from_proto,
-    _batch_to_proto, _batch_results_from_proto,
+    _stmt_to_proto,
+    _result_set_from_proto,
+    _batch_to_proto,
+    _batch_results_from_proto,
     _error_from_proto,
 )
 
+
 def _create_hrana_client(config: _Config) -> HranaClient:
     assert config.scheme in ("ws", "wss")
-    url = urllib.parse.urlunparse((
-        config.scheme, config.authority, config.path,
-        "", "", "",
-    ))
+    url = urllib.parse.urlunparse(
+        (
+            config.scheme,
+            config.authority,
+            config.path,
+            "",
+            "",
+            "",
+        )
+    )
     return HranaClient(url, config.auth_token)
+
 
 class HranaClient(Client):
     _session: aiohttp.ClientSession
@@ -73,7 +83,9 @@ class HranaClient(Client):
     async def close(self) -> None:
         await self._conn.close()
         if len(self._close_tasks) > 0:
-            await asyncio.wait(list(self._close_tasks), return_when=asyncio.ALL_COMPLETED)
+            await asyncio.wait(
+                list(self._close_tasks), return_when=asyncio.ALL_COMPLETED
+            )
         await self._session.close()
         self._closed = True
 
@@ -81,16 +93,19 @@ class HranaClient(Client):
     def closed(self) -> bool:
         return self._closed
 
+
 class HranaTransaction(Transaction):
     _stream: HranaStream
     _begin_fut: asyncio.Future[proto.StmtResult]
 
     def __init__(self, stream: HranaStream):
         self._stream = stream
-        self._begin_fut = stream.execute({
-            "sql": "BEGIN",
-            "want_rows": False,
-        })
+        self._begin_fut = stream.execute(
+            {
+                "sql": "BEGIN",
+                "want_rows": False,
+            }
+        )
 
     async def execute(self, stmt: InStatement, args: InArgs = None) -> ResultSet:
         await self._begin_fut
@@ -106,10 +121,12 @@ class HranaTransaction(Transaction):
         if self._stream.closed:
             return
 
-        fut = self._stream.execute({
-            "sql": "ROLLBACK",
-            "want_rows": False,
-        })
+        fut = self._stream.execute(
+            {
+                "sql": "ROLLBACK",
+                "want_rows": False,
+            }
+        )
         self._stream.close()
         await fut
 
@@ -118,10 +135,12 @@ class HranaTransaction(Transaction):
         if self._stream.closed:
             raise LibsqlError("The transaction is closed", "TRANSACTION_CLOSED")
 
-        fut = self._stream.execute({
-            "sql": "COMMIT",
-            "want_rows": False,
-        })
+        fut = self._stream.execute(
+            {
+                "sql": "COMMIT",
+                "want_rows": False,
+            }
+        )
         self._stream.close()
         await fut
 

@@ -64,8 +64,8 @@ else:
 
 
 def _create_hrana_connection(
-        session: aiohttp.ClientSession,
-        url: str,
+    session: aiohttp.ClientSession,
+    url: str,
 ) -> HranaConn:
     config = _expand_config(url, auth_token=None)
 
@@ -73,10 +73,16 @@ def _create_hrana_connection(
     if config.scheme == "libsql":
         config = config._replace(scheme="wss")
 
-    url = urllib.parse.urlunparse((
-        config.scheme, config.authority, config.path,
-        "", "", "",
-    ))
+    url = urllib.parse.urlunparse(
+        (
+            config.scheme,
+            config.authority,
+            config.path,
+            "",
+            "",
+            "",
+        )
+    )
     return HranaConn(session, url, config.auth_token)
 
 
@@ -87,9 +93,9 @@ def _conv_stmt_plain_to_stored(stmt: Stmt, sql_id: int) -> Stmt:
 
 
 def _conv_stmt(
-        sql: str,
-        parameters: SqlParameters,
-        want_rows: bool,
+    sql: str,
+    parameters: SqlParameters,
+    want_rows: bool,
 ) -> Stmt:
     stmt: Stmt = {
         "sql": sql,
@@ -97,8 +103,7 @@ def _conv_stmt(
     }
     if isinstance(parameters, collections.abc.Mapping):
         stmt["named_args"] = [
-            {"name": k, "value": _value_to_proto(v)}
-            for k, v in parameters.items()
+            {"name": k, "value": _value_to_proto(v)} for k, v in parameters.items()
         ]
     elif parameters:
         # SupportsLenAndGetItem is only __len__ + __getitem__, no __iter__
@@ -112,9 +117,9 @@ def _conv_stmt(
 
 
 def _conv_stmts(
-        sql: str,
-        parameters: Iterable[SqlParameters],
-        want_rows: bool,
+    sql: str,
+    parameters: Iterable[SqlParameters],
+    want_rows: bool,
 ) -> List[Stmt]:
     return [_conv_stmt(sql, p, want_rows) for p in parameters]
 
@@ -128,7 +133,7 @@ _aiohttp_error_map = (
 
 
 def _get_aiohttp_client_error_code(
-        error: aiohttp.ClientError,
+    error: aiohttp.ClientError,
 ) -> Tuple[int, str]:
     for error_cls, error_name in _aiohttp_error_map:
         if isinstance(error, error_cls):
@@ -138,8 +143,8 @@ def _get_aiohttp_client_error_code(
 
 
 def _conv_stmt_result(
-        result: Optional[StmtResult],
-        error: Optional[BaseException],
+    result: Optional[StmtResult],
+    error: Optional[BaseException],
 ) -> RawExecuteResult:
     if isinstance(error, aiohttp.ClientError):
         code, name = _get_aiohttp_client_error_code(error)
@@ -158,10 +163,12 @@ def _conv_batch(stmts: List[Stmt]) -> Batch:
         if i == 0:
             steps.append({"stmt": stmt})
         else:
-            steps.append({
-                "condition": {"type": "ok", "step": i - 1},
-                "stmt": stmt,
-            })
+            steps.append(
+                {
+                    "condition": {"type": "ok", "step": i - 1},
+                    "stmt": stmt,
+                }
+            )
 
     return {"steps": steps}
 
@@ -178,6 +185,7 @@ def _conv_batch_result(resp: BatchResult) -> RawExecuteResult:
 
 if TYPE_CHECKING:
     if sys.version_info[:2] >= (3, 9):
+
         @overload
         def run_in_executor(
             fn: Callable[P, Awaitable[asyncio.Future[T]]],
@@ -204,6 +212,7 @@ def run_in_executor(fn: Callable[P, T]) -> Callable[P, T]:
 
     :meta private:
     """
+
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         self = args[0]
         assert isinstance(self, ConnectionHrana)
@@ -221,6 +230,7 @@ class ConnectionHrana(Connection):
     using the `Hrana Protocol
     <https://github.com/libsql/sqld/blob/main/docs/HRANA_2_SPEC.md>`_.
     """
+
     _executor: Optional[AsyncExecutor]  # TODO: share
     _session: Optional[aiohttp.ClientSession]  # TODO: share (per url)
     _conn: Optional[HranaConn]  # TODO: share (per url)
@@ -246,7 +256,7 @@ class ConnectionHrana(Connection):
             isolation_level=isolation_level,
             check_same_thread=check_same_thread,
             cached_statements=cached_statements,
-            autocommit=autocommit
+            autocommit=autocommit,
         )
 
     def _raw_init(self) -> None:
@@ -357,6 +367,7 @@ class CursorHrana(Cursor):
     using the `Hrana Protocol
     <https://github.com/libsql/sqld/blob/main/docs/HRANA_2_SPEC.md>`_.
     """
+
     connection: ConnectionHrana
 
     def _raw_execute_one(self, stmt: Stmt) -> RawExecuteResult:
@@ -394,11 +405,11 @@ class CursorHrana(Cursor):
                     pass
 
     def _raw_execute(
-            self,
-            sql: str,
-            parameters: Iterable[SqlParameters],
-            *,
-            want_rows: bool = True,
+        self,
+        sql: str,
+        parameters: Iterable[SqlParameters],
+        *,
+        want_rows: bool = True,
     ) -> RawExecuteResult:
         stmts = _conv_stmts(sql, parameters, want_rows)
         if len(stmts) == 1:

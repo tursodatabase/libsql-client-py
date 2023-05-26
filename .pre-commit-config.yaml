@@ -15,6 +15,13 @@ repos:
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
 
+-   repo: https://github.com/python/black
+    rev: 23.3.0
+    hooks:
+    -   id: black
+        # tests/dbapi2 are copies from cpython-3.11.3, do not touch
+        exclude: "^(tests/dbapi2|hrana-test-server)/"
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.3.0
     hooks:

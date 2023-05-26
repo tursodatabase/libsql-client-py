@@ -192,6 +192,7 @@ if sys.version_info[:2] >= (3, 11):
         SQLITE_WARNING,
     )
 else:
+
     class Blob:
         pass
 

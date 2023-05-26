@@ -10,15 +10,18 @@ from . import proto
 from .convert import _error_from_proto
 from .id_alloc import IdAlloc
 
+
 @dataclass
 class _ResponseState:
     type: str
     future: asyncio.Future[proto.Response]
 
+
 @dataclass
 class _StreamState:
     stream_id: int
     closed: Optional[BaseException]
+
 
 class HranaConn:
     _connect_task: asyncio.Task[aiohttp.ClientWebSocketResponse]
@@ -37,7 +40,9 @@ class HranaConn:
 
     exception: Optional[BaseException]
 
-    def __init__(self, session: aiohttp.ClientSession, url: str, auth_token: Optional[str] = None):
+    def __init__(
+        self, session: aiohttp.ClientSession, url: str, auth_token: Optional[str] = None
+    ):
         self._connect_task = asyncio.create_task(self._do_connect(session, url))
         self._connect_task.add_done_callback(self._done_connect)
         self._receive_task = None
@@ -62,7 +67,9 @@ class HranaConn:
         if self.exception:
             raise self.exception
 
-    async def _do_connect(self, session: aiohttp.ClientSession, url: str) -> aiohttp.ClientWebSocketResponse:
+    async def _do_connect(
+        self, session: aiohttp.ClientSession, url: str
+    ) -> aiohttp.ClientWebSocketResponse:
         return await session.ws_connect(
             url,
             protocols=["hrana2"],
@@ -70,7 +77,9 @@ class HranaConn:
             autoping=True,
         )
 
-    def _done_connect(self, task: asyncio.Task[aiohttp.ClientWebSocketResponse]) -> None:
+    def _done_connect(
+        self, task: asyncio.Task[aiohttp.ClientWebSocketResponse]
+    ) -> None:
         e: Optional[BaseException]
         if task.cancelled():
             e = LibsqlError("The connect task was cancelled", "CLIENT_CLOSED")
@@ -100,11 +109,17 @@ class HranaConn:
                 try:
                     self._receive(msg.data)
                 except Exception as e:
-                    await socket.close(code=3007, message="Could not handle message".encode())
+                    await socket.close(
+                        code=3007, message="Could not handle message".encode()
+                    )
                     raise
             elif msg.type == aiohttp.WSMsgType.BINARY:
-                await socket.close(code=3003, message="Only text messages are accepted".encode())
-                raise LibsqlError("Received a binary WebSocket message", "HRANA_PROTO_ERROR")
+                await socket.close(
+                    code=3003, message="Only text messages are accepted".encode()
+                )
+                raise LibsqlError(
+                    "Received a binary WebSocket message", "HRANA_PROTO_ERROR"
+                )
             elif msg.type == aiohttp.WSMsgType.PING:
                 await socket.pong(msg.data)
             elif msg.type == aiohttp.WSMsgType.PONG:
@@ -196,11 +211,15 @@ class HranaConn:
         try:
             msg = json.loads(text)
         except ValueError as e:
-            raise LibsqlError("Server message is not valid JSON", "HRANA_PROTO_ERROR") from e
+            raise LibsqlError(
+                "Server message is not valid JSON", "HRANA_PROTO_ERROR"
+            ) from e
 
         if msg["type"] in ("hello_ok", "hello_error"):
             if self._recvd_hello:
-                raise LibsqlError("Received a duplicated error response", "HRANA_PROTO_ERROR")
+                raise LibsqlError(
+                    "Received a duplicated error response", "HRANA_PROTO_ERROR"
+                )
             self._recvd_hello = True
             self._finished_handshake.set()
 
@@ -208,18 +227,25 @@ class HranaConn:
                 raise _error_from_proto(msg["error"])
             return
         elif not self._recvd_hello:
-            raise LibsqlError("Received a non-hello message before hello response", "HRANA_PROTO_ERROR")
+            raise LibsqlError(
+                "Received a non-hello message before hello response",
+                "HRANA_PROTO_ERROR",
+            )
 
         if msg["type"] == "response_ok":
             request_id = int(msg["request_id"])
             response_state = self._response_map.pop(request_id, None)
             if response_state is None:
-                raise LibsqlError("Received unexpected OK response", "HRANA_PROTO_ERROR")
+                raise LibsqlError(
+                    "Received unexpected OK response", "HRANA_PROTO_ERROR"
+                )
             self._request_id_alloc.free(request_id)
 
             try:
                 if response_state.type != msg["response"]["type"]:
-                    raise LibsqlError("Received unexpected type of response", "HRANA_PROTO_ERROR")
+                    raise LibsqlError(
+                        "Received unexpected type of response", "HRANA_PROTO_ERROR"
+                    )
                 response_state.future.set_result(msg["response"])
             except Exception as e:
                 response_state.future.set_exception(e)
@@ -228,7 +254,9 @@ class HranaConn:
             request_id = int(msg["request_id"])
             response_state = self._response_map.pop(request_id, None)
             if response_state is None:
-                raise LibsqlError("Received unexpected error response", "HRANA_PROTO_ERROR")
+                raise LibsqlError(
+                    "Received unexpected error response", "HRANA_PROTO_ERROR"
+                )
             self._request_id_alloc.free(request_id)
 
             response_state.future.set_exception(_error_from_proto(msg["error"]))
@@ -248,10 +276,12 @@ class HranaConn:
             if e is not None:
                 self._close_stream(stream_state, e)
 
-        open_fut = self.send_request({
-            "type": "open_stream",
-            "stream_id": stream_id,
-        })
+        open_fut = self.send_request(
+            {
+                "type": "open_stream",
+                "stream_id": stream_id,
+            }
+        )
         open_fut.add_done_callback(open_done)
 
         return HranaStream(self, stream_state)
@@ -266,10 +296,12 @@ class HranaConn:
             if not fut.cancelled():
                 fut.exception()
 
-        close_fut = self.send_request({
-            "type": "close_stream",
-            "stream_id": stream_state.stream_id,
-        })
+        close_fut = self.send_request(
+            {
+                "type": "close_stream",
+                "stream_id": stream_state.stream_id,
+            }
+        )
         close_fut.add_done_callback(close_done)
 
     async def close(self) -> None:
@@ -289,11 +321,13 @@ class HranaConn:
             if e is not None:
                 self._sql_id_alloc.free(sql_id)
 
-        store_sql_fut = self.send_request({
-            "type": "store_sql",
-            "sql_id": sql_id,
-            "sql": sql,
-        })
+        store_sql_fut = self.send_request(
+            {
+                "type": "store_sql",
+                "sql_id": sql_id,
+                "sql": sql,
+            }
+        )
         store_sql_fut.add_done_callback(store_sql_done)
         return sql_id
 
@@ -306,10 +340,12 @@ class HranaConn:
             if not fut.cancelled():
                 fut.exception()
 
-        close_sql_fut = self.send_request( {
-            "type": "close_sql",
-            "sql_id": sql_id,
-        })
+        close_sql_fut = self.send_request(
+            {
+                "type": "close_sql",
+                "sql_id": sql_id,
+            }
+        )
         close_sql_fut.add_done_callback(close_sql_done)
 
 
@@ -323,7 +359,9 @@ class HranaStream:
 
     def execute(self, stmt: proto.Stmt) -> asyncio.Future[proto.StmtResult]:
         if self._state.closed is not None:
-            raise LibsqlError("Stream was closed", "STREAM_CLOSED") from self._state.closed
+            raise LibsqlError(
+                "Stream was closed", "STREAM_CLOSED"
+            ) from self._state.closed
 
         request: proto.ExecuteReq = {
             "type": "execute",
@@ -334,11 +372,14 @@ class HranaStream:
 
         def get_result(response: proto.Response) -> proto.StmtResult:
             return cast(proto.ExecuteResp, response)["result"]
+
         return _map_future(response_fut, get_result)
 
     def sequence(self, stmt: Union[str, int]) -> asyncio.Future[None]:
         if self._state.closed is not None:
-            raise LibsqlError("Stream was closed", "STREAM_CLOSED") from self._state.closed
+            raise LibsqlError(
+                "Stream was closed", "STREAM_CLOSED"
+            ) from self._state.closed
 
         request: proto.SequenceReq
         if isinstance(stmt, str):
@@ -358,11 +399,14 @@ class HranaStream:
 
         def get_result(response: proto.Response) -> None:
             return None
+
         return _map_future(response_fut, get_result)
 
     def batch(self, batch: proto.Batch) -> asyncio.Future[proto.BatchResult]:
         if self._state.closed is not None:
-            raise LibsqlError("Stream was closed", "STREAM_CLOSED") from self._state.closed
+            raise LibsqlError(
+                "Stream was closed", "STREAM_CLOSED"
+            ) from self._state.closed
 
         request: proto.BatchReq = {
             "type": "batch",
@@ -373,6 +417,7 @@ class HranaStream:
 
         def get_result(response: proto.Response) -> proto.BatchResult:
             return cast(proto.BatchResp, response)["result"]
+
         return _map_future(response_fut, get_result)
 
     def close(self) -> None:
@@ -389,11 +434,14 @@ class HranaStream:
     def __exit__(self, _exc_type: Any, _exc_value: Any, _traceback: Any) -> None:
         self.close()
 
+
 T = TypeVar("T")
 R = TypeVar("R")
 
+
 def _map_future(fut: asyncio.Future[T], f: Callable[[T], R]) -> asyncio.Future[R]:
     ret: asyncio.Future[R] = asyncio.get_running_loop().create_future()
+
     def done(fut: asyncio.Future[T]) -> None:
         if fut.cancelled():
             ret.cancel()
@@ -403,5 +451,6 @@ def _map_future(fut: asyncio.Future[T], f: Callable[[T], R]) -> asyncio.Future[R
             ret.set_result(f(fut.result()))
         else:
             ret.set_exception(e)
+
     fut.add_done_callback(done)
     return ret
