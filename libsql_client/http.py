@@ -25,6 +25,15 @@ from .result import ResultSet
 
 def _create_http_client(config: _Config) -> HttpClient:
     assert config.scheme in ("http", "https")
+    if config.scheme == "http" and config.tls:
+        raise LibsqlError(
+            "A 'http:' URL cannot opt into TLS by using ?tls=1", "URL_INVALID"
+        )
+    elif config.scheme == "https" and not config.tls:
+        raise LibsqlError(
+            "A 'https:' URL cannot opt out of TLS by using ?tls=0", "URL_INVALID"
+        )
+
     url = urllib.parse.urlunparse(
         (
             config.scheme,

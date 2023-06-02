@@ -28,6 +28,7 @@ from .types import LEGACY_TRANSACTION_CONTROL
 from .types import OperationalError
 from .types import RawExecuteResult
 from .types import SqlParameters
+from ..client import LibsqlError
 from ..config import _expand_config
 from ..hrana.conn import HranaConn
 from ..hrana.conn import HranaStream
@@ -55,11 +56,21 @@ def _create_hrana_connection(
     session: aiohttp.ClientSession,
     url: str,
 ) -> HranaConn:
-    config = _expand_config(url, auth_token=None)
+    config = _expand_config(url, auth_token=None, tls=None)
 
-    # TODO: maybe handle this inside HranaConn?
-    if config.scheme == "libsql":
-        config = config._replace(scheme="wss")
+    if config.scheme not in ("ws", "wss"):
+        raise LibsqlError(
+            f"Only 'libsql', 'ws' and 'wss' URLs are supported, got {config.scheme!r}",
+            "URL_INVALID",
+        )
+    elif config.scheme == "ws" and config.tls:
+        raise LibsqlError(
+            "A 'ws:' URL cannot opt into TLS by using ?tls=1", "URL_INVALID"
+        )
+    elif config.scheme == "wss" and not config.tls:
+        raise LibsqlError(
+            "A 'wss:' URL cannot opt out of TLS by using ?tls=0", "URL_INVALID"
+        )
 
     url = urllib.parse.urlunparse(
         (
