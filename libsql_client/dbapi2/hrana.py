@@ -14,7 +14,6 @@ from typing import Tuple
 from typing import Type
 from typing import TYPE_CHECKING
 from typing import TypeVar
-import urllib.parse
 
 import aiohttp
 from typing_extensions import ParamSpec
@@ -30,6 +29,7 @@ from .types import RawExecuteResult
 from .types import SqlParameters
 from ..client import LibsqlError
 from ..config import _expand_config
+from ..hrana.client import _config_to_url
 from ..hrana.conn import HranaConn
 from ..hrana.conn import HranaStream
 from ..hrana.convert import _error_from_proto
@@ -58,30 +58,22 @@ def _create_hrana_connection(
 ) -> HranaConn:
     config = _expand_config(url, auth_token=None, tls=None)
 
-    if config.scheme not in ("ws", "wss"):
-        raise LibsqlError(
-            f"Only 'libsql', 'ws' and 'wss' URLs are supported, got {config.scheme!r}",
-            "URL_INVALID",
-        )
-    elif config.scheme == "ws" and config.tls:
-        raise LibsqlError(
-            "A 'ws:' URL cannot opt into TLS by using ?tls=1", "URL_INVALID"
-        )
-    elif config.scheme == "wss" and not config.tls:
-        raise LibsqlError(
-            "A 'wss:' URL cannot opt out of TLS by using ?tls=0", "URL_INVALID"
-        )
+    try:
+        if config.scheme not in ("ws", "wss"):
+            raise LibsqlError(
+                "Only 'libsql', 'ws' and 'wss' URLs are supported,"
+                f" got {config.scheme!r}",
+                "URL_INVALID",
+            )
+        url = _config_to_url(config)
+    except LibsqlError as e:
+        if e.code == "URL_INVALID":
+            sqlite_err = OperationalError(str(e))
+            sqlite_err.sqlite_errorcode = 14  # type: ignore
+            sqlite_err.sqlite_errorname = "SQLITE_CANTOPEN"  # type: ignore
+            raise sqlite_err
+        raise
 
-    url = urllib.parse.urlunparse(
-        (
-            config.scheme,
-            config.authority,
-            config.path,
-            "",
-            "",
-            "",
-        )
-    )
     return HranaConn(session, url, config.auth_token)
 
 
