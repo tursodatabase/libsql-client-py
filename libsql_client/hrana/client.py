@@ -26,7 +26,21 @@ from ..result import ResultSet
 
 def _create_hrana_client(config: _Config) -> HranaClient:
     assert config.scheme in ("ws", "wss")
-    url = urllib.parse.urlunparse(
+    url = _config_to_url(config)
+    return HranaClient(url, config.auth_token)
+
+
+def _config_to_url(config: _Config) -> str:
+    if config.scheme == "ws" and config.tls:
+        raise LibsqlError(
+            "A 'ws:' URL cannot opt into TLS by using ?tls=1", "URL_INVALID"
+        )
+    elif config.scheme == "wss" and not config.tls:
+        raise LibsqlError(
+            "A 'wss:' URL cannot opt out of TLS by using ?tls=0", "URL_INVALID"
+        )
+
+    return urllib.parse.urlunparse(
         (
             config.scheme,
             config.authority,
@@ -36,7 +50,6 @@ def _create_hrana_client(config: _Config) -> HranaClient:
             "",
         )
     )
-    return HranaClient(url, config.auth_token)
 
 
 class HranaClient(Client):

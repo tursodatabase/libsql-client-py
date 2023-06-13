@@ -38,3 +38,31 @@ def test_error_url_param_not_supported():
         libsql_client.create_client("ws://localhost?foo=bar")
     assert excinfo.value.code == "URL_PARAM_NOT_SUPPORTED"
     assert "foo" in str(excinfo.value)
+
+
+def test_error_url_scheme_incompatible_with_tls():
+    urls = [
+        "ws://localhost?tls=1",
+        "wss://localhost?tls=0",
+        "http://localhost?tls=1",
+        "https://localhost?tls=0",
+    ]
+    for url in urls:
+        with pytest.raises(libsql_client.LibsqlError) as excinfo:
+            libsql_client.create_client(url)
+        assert excinfo.value.code == "URL_INVALID"
+        assert "tls" in str(excinfo.value)
+
+
+def test_error_invalid_value_of_tls():
+    with pytest.raises(libsql_client.LibsqlError) as excinfo:
+        libsql_client.create_client("libsql://localhost?tls=foo")
+    assert excinfo.value.code == "URL_INVALID"
+    assert "foo" in str(excinfo.value)
+
+
+def test_missing_port_in_libsql_url_without_tls():
+    with pytest.raises(libsql_client.LibsqlError) as excinfo:
+        libsql_client.create_client("libsql://localhost?tls=0")
+    assert excinfo.value.code == "URL_INVALID"
+    assert "port" in str(excinfo.value)
