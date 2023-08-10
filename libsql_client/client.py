@@ -56,10 +56,12 @@ class Statement:
 
 class LibsqlError(RuntimeError):
     code: str
+    explanation: str
 
     def __init__(self, message: str, code: str):
         super(RuntimeError, self).__init__(f"{code}: {message}")
         self.code = code
+        self.explanation = message
 
 
 TClient = TypeVar("TClient", bound="Client")
