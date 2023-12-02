@@ -55,8 +55,9 @@ T = TypeVar("T")
 def _create_hrana_connection(
     session: aiohttp.ClientSession,
     url: str,
+    auth_token: str = None,
 ) -> HranaConn:
-    config = _expand_config(url, auth_token=None, tls=None)
+    config = _expand_config(url, auth_token=auth_token, tls=None)
 
     try:
         if config.scheme not in ("ws", "wss"):
@@ -227,10 +228,12 @@ class ConnectionHrana(Connection):
     _conn: Optional[HranaConn]  # TODO: share (per url)
     _stream: Optional[HranaStream]
     cursor_factory: Type["CursorHrana"]
+    auth_token: str = ""
 
     def __init__(
         self,
         database: str,
+        auth_token: str = None,
         timeout: float = 5.0,
         detect_types: int = 0,
         isolation_level: Optional[IsolationLevel] = "",
@@ -240,6 +243,7 @@ class ConnectionHrana(Connection):
         autocommit: Autocommit = LEGACY_TRANSACTION_CONTROL,
     ) -> None:
         assert uri
+        self.auth_token = auth_token
         super().__init__(
             database=database,
             timeout=timeout,
@@ -279,7 +283,7 @@ class ConnectionHrana(Connection):
     async def _acquire_connection(self, url: str) -> HranaConn:
         assert self._session is not None
         # TODO: share (per url)
-        conn = _create_hrana_connection(self._session, url)
+        conn = _create_hrana_connection(self._session, url, self.auth_token)
         try:
             await conn.wait_connected()
             return conn
