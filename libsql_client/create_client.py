@@ -7,7 +7,7 @@ from .client import LibsqlError
 from .config import _expand_config
 from .hrana import _create_hrana_client
 from .http import _create_http_client
-from .sqlite3 import _create_sqlite3_client
+from .sqlite3_utils import _create_sqlite3_client
 
 
 def create_client(
