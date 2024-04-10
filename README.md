@@ -8,6 +8,8 @@
 
 This is the source repository of the Python SDK for libSQL. You can either connect to a local SQLite database or to a remote libSQL server ([sqld][sqld]).
 
+> **_NOTE:_**  If you want to use libSQL with SQLAlchemy, you should check out the [libSQL dialect](https://github.com/libsql/sqlalchemy-libsql).
+
 [sqld]: https://github.com/libsql/sqld
 
 ## Installation

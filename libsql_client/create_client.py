@@ -20,6 +20,10 @@ def create_client(
         return _create_hrana_client(config)
     elif config.scheme in ("http", "https"):
         return _create_http_client(config)
+    elif not url:
+        raise LibsqlError(
+            f"Database URL is {url}.", "URL_UNDEFINED"
+        )
     else:
         raise LibsqlError(
             f"Unsupported URL scheme {config.scheme!r}", "URL_SCHEME_NOT_SUPPORTED"
