@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repo is now archived, and progress continues at [tursodatabase/libsql-python](https://github.com/tursodatabase/libsql-python)
+
 # Python SDK for libSQL
 
 **[API reference][reference] | [Github][github] | [PyPI][pypi]**
